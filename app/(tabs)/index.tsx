@@ -1,7 +1,8 @@
 import { useState } from 'react';
-import { Modal, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { CircularQuotaProgress } from '@/src/components/CircularQuotaProgress';
+import { QuotaFormModal } from '@/src/components/QuotaFormModal';
 import { Screen } from '@/src/components/Screen';
 import { StatCard } from '@/src/components/StatCard';
 import { useQuotas } from '@/src/hooks/useQuotas';
@@ -14,26 +15,9 @@ export default function HomeScreen() {
   const summary = getQuotaSummary(quotas);
 
   const [isModalVisible, setIsModalVisible] = useState(false);
-  const [nameInput, setNameInput] = useState('');
-  const [amountInput, setAmountInput] = useState('');
-  const [amountError, setAmountError] = useState<string | null>(null);
 
   const closeModal = () => {
     setIsModalVisible(false);
-    setNameInput('');
-    setAmountInput('');
-    setAmountError(null);
-  };
-
-  const handleSave = () => {
-    const parsedAmount = Number.parseFloat(amountInput.replace(',', '.'));
-    if (!Number.isFinite(parsedAmount) || parsedAmount <= 0) {
-      setAmountError('Enter an amount greater than 0');
-      return;
-    }
-
-    addPaidQuota(nameInput.trim() || 'New User', parsedAmount);
-    closeModal();
   };
 
   return (
@@ -68,59 +52,18 @@ export default function HomeScreen() {
           <Text style={styles.fabLabel}>+</Text>
         </Pressable>
 
-        <Modal
+        <QuotaFormModal
           visible={isModalVisible}
-          transparent
-          animationType="fade"
-          onRequestClose={closeModal}>
-          <View style={styles.modalBackdrop}>
-            <View style={[styles.modalCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-              <Text style={[styles.modalTitle, { color: colors.text }]}>Add paid quota</Text>
-
-              <TextInput
-                value={nameInput}
-                onChangeText={setNameInput}
-                placeholder="Name"
-                placeholderTextColor={colors.muted}
-                style={[styles.input, { color: colors.text, borderColor: colors.border }]}
-              />
-
-              <TextInput
-                value={amountInput}
-                onChangeText={(value) => {
-                  setAmountInput(value);
-                  if (amountError) {
-                    setAmountError(null);
-                  }
-                }}
-                placeholder="Amount (€)"
-                placeholderTextColor={colors.muted}
-                keyboardType="decimal-pad"
-                style={[styles.input, { color: colors.text, borderColor: colors.border }]}
-              />
-
-              {amountError ? <Text style={[styles.errorText, { color: colors.danger }]}>{amountError}</Text> : null}
-
-              <View style={styles.modalActions}>
-                <Pressable
-                  onPress={closeModal}
-                  style={[styles.secondaryButton, { borderColor: colors.border }]}
-                  accessibilityRole="button"
-                  accessibilityLabel="Cancel add paid quota">
-                  <Text style={[styles.secondaryButtonLabel, { color: colors.text }]}>Cancel</Text>
-                </Pressable>
-
-                <Pressable
-                  onPress={handleSave}
-                  style={[styles.primaryButton, { backgroundColor: colors.primary }]}
-                  accessibilityRole="button"
-                  accessibilityLabel="Save paid quota">
-                  <Text style={styles.primaryButtonLabel}>Save</Text>
-                </Pressable>
-              </View>
-            </View>
-          </View>
-        </Modal>
+          title="Add paid quota"
+          confirmLabel="Save"
+          cancelAccessibilityLabel="Cancel add paid quota"
+          confirmAccessibilityLabel="Save paid quota"
+          onCancel={closeModal}
+          onSubmit={({ name, amount }) => {
+            addPaidQuota(name, amount);
+            closeModal();
+          }}
+        />
       </View>
     </Screen>
   );
@@ -160,58 +103,5 @@ const styles = StyleSheet.create({
     fontSize: 28,
     lineHeight: 28,
     fontWeight: '600',
-  },
-  modalBackdrop: {
-    flex: 1,
-    justifyContent: 'center',
-    paddingHorizontal: 18,
-    backgroundColor: '#00000055',
-  },
-  modalCard: {
-    borderWidth: 1,
-    borderRadius: 16,
-    padding: 16,
-    gap: 10,
-  },
-  modalTitle: {
-    fontSize: 18,
-    fontWeight: '700',
-    marginBottom: 4,
-  },
-  input: {
-    borderWidth: 1,
-    borderRadius: 12,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    fontSize: 14,
-  },
-  errorText: {
-    fontSize: 12,
-  },
-  modalActions: {
-    marginTop: 4,
-    flexDirection: 'row',
-    justifyContent: 'flex-end',
-    gap: 10,
-  },
-  secondaryButton: {
-    borderWidth: 1,
-    borderRadius: 10,
-    paddingVertical: 8,
-    paddingHorizontal: 14,
-  },
-  secondaryButtonLabel: {
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  primaryButton: {
-    borderRadius: 10,
-    paddingVertical: 8,
-    paddingHorizontal: 14,
-  },
-  primaryButtonLabel: {
-    color: '#ffffff',
-    fontSize: 14,
-    fontWeight: '700',
   },
 });

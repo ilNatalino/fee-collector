@@ -6,6 +6,11 @@ export interface UserQuota {
   insertedDate: string;
 }
 
+export type UpdateQuotaInput = {
+  name: string;
+  amountDue: number;
+};
+
 export interface QuotaSummary {
   totalUsers: number;
   paidUsers: number;

@@ -3,11 +3,13 @@ import { FlatList, StyleSheet, View } from 'react-native';
 
 import { UserQuota } from '@/src/types/quota';
 
+import { ListRow, type ListRowAction } from './ListRow';
 import { UserQuotaListItem } from './UserQuotaListItem';
-import { ListRow, type ListRowAction } from './UserQuotaRow';
 
 type ActionListProps = Readonly<{
   quotas: UserQuota[];
+  editFeature?: boolean;
+  onRequestEdit?: (userQuota: UserQuota) => void;
   deleteFeature?: boolean;
   onRequestDelete?: (userQuota: UserQuota) => void;
 }>;
@@ -16,19 +18,34 @@ function ItemSeparator() {
   return <View style={styles.separator} />;
 }
 
-export function ActionList({ quotas, deleteFeature = false, onRequestDelete }: ActionListProps) {
+export function ActionList({
+  quotas,
+  editFeature = false,
+  onRequestEdit,
+  deleteFeature = false,
+  onRequestDelete,
+}: ActionListProps) {
   const openSwipeableIdRef = useRef<string | null>(null);
   const closeActionsRef = useRef<Record<string, () => void>>({});
-  const baseActions: ListRowAction[] =
-    deleteFeature && onRequestDelete
-      ? [
-          {
-            title: 'Delete',
-            icon: 'trash',
-            callback: onRequestDelete,
-          },
-        ]
-      : [];
+  const baseActions: ListRowAction[] = [];
+
+  if (editFeature && onRequestEdit) {
+    baseActions.push({
+      title: 'Edit',
+      icon: 'pencil',
+      tone: 'primary',
+      callback: onRequestEdit,
+    });
+  }
+
+  if (deleteFeature && onRequestDelete) {
+    baseActions.push({
+      title: 'Delete',
+      icon: 'trash',
+      tone: 'danger',
+      callback: onRequestDelete,
+    });
+  }
   const hasActions = baseActions.length > 0;
 
   const handleRegisterCloser = useCallback((quotaId: string, close: (() => void) | null) => {

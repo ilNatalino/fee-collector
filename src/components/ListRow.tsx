@@ -11,6 +11,7 @@ import { type UserQuotaListItemProps } from './UserQuotaListItem';
 export type ListRowAction = {
   title: string;
   icon: ComponentProps<typeof Ionicons>['name'];
+  tone?: 'danger' | 'primary';
   callback: (userQuota: UserQuota) => void;
 };
 
@@ -65,7 +66,7 @@ export function ListRow({
             swipeableRef.current?.close();
             action.callback(userQuota);
           }}
-          style={[styles.deleteAction, { backgroundColor: colors.danger }]}
+          style={[styles.deleteAction, { backgroundColor: colors[action.tone ?? 'danger'] }]}
           accessibilityRole="button"
           accessibilityLabel={`${action.title} ${userQuota.name}`}>
           <Ionicons name={action.icon} size={18} color="#ffffff" />

@@ -1,16 +1,19 @@
 import { useState } from 'react';
 
+import { ActionList } from '@/src/components/ActionList';
 import { DeleteConfirmationModal } from '@/src/components/DeleteConfirmationModal';
+import { QuotaFormModal } from '@/src/components/QuotaFormModal';
 import { Screen } from '@/src/components/Screen';
-import { ActionList } from '@/src/components/UserQuotaList';
 import { useQuotas } from '@/src/hooks/useQuotas';
 import { UserQuota } from '@/src/types/quota';
 
 export default function PaymentsScreen() {
-  const { quotas, deleteQuotaById } = useQuotas();
+  const { quotas, deleteQuotaById, updateQuotaById } = useQuotas();
   const [quotaToDelete, setQuotaToDelete] = useState<UserQuota | null>(null);
+  const [quotaToEdit, setQuotaToEdit] = useState<UserQuota | null>(null);
 
   const closeDeleteModal = () => setQuotaToDelete(null);
+  const closeEditModal = () => setQuotaToEdit(null);
 
   const handleConfirmDelete = async () => {
     if (!quotaToDelete) {
@@ -21,9 +24,41 @@ export default function PaymentsScreen() {
     closeDeleteModal();
   };
 
+  const handleConfirmEdit = async ({ name, amount }: { name: string; amount: number }) => {
+    if (!quotaToEdit) {
+      return;
+    }
+
+    await updateQuotaById(quotaToEdit.id, {
+      name,
+      amountDue: amount,
+    });
+    closeEditModal();
+  };
+
   return (
     <Screen>
-      <ActionList quotas={quotas} deleteFeature onRequestDelete={setQuotaToDelete} />
+      <ActionList
+        quotas={quotas}
+        editFeature
+        onRequestEdit={setQuotaToEdit}
+        deleteFeature
+        onRequestDelete={setQuotaToDelete}
+      />
+
+      <QuotaFormModal
+        visible={Boolean(quotaToEdit)}
+        title="Edit payment"
+        confirmLabel="Save"
+        cancelAccessibilityLabel="Cancel edit payment"
+        confirmAccessibilityLabel="Confirm edit payment"
+        initialName={quotaToEdit?.name}
+        initialAmount={quotaToEdit?.amountDue}
+        onCancel={closeEditModal}
+        onSubmit={(payload) => {
+          void handleConfirmEdit(payload);
+        }}
+      />
 
       <DeleteConfirmationModal
         visible={Boolean(quotaToDelete)}
