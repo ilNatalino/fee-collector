@@ -22,6 +22,7 @@ export function QuotaProvider({ children }: PropsWithChildren) {
         name,
         amountDue: amount,
         hasPaid: true,
+        insertedDate: new Date().toISOString(),
       },
       ...currentQuotas,
     ]);

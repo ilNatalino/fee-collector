@@ -3,6 +3,7 @@ export interface UserQuota {
   name: string;
   amountDue: number;
   hasPaid: boolean;
+  insertedDate: string;
 }
 
 export interface QuotaSummary {
