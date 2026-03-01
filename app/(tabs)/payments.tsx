@@ -1,32 +1,43 @@
-import { FlatList, StyleSheet, View } from 'react-native';
+import { useState } from 'react';
 
+import { DeleteConfirmationModal } from '@/src/components/DeleteConfirmationModal';
 import { Screen } from '@/src/components/Screen';
-import { UserQuotaRow } from '@/src/components/UserQuotaRow';
+import { ActionList } from '@/src/components/UserQuotaList';
 import { useQuotas } from '@/src/hooks/useQuotas';
+import { UserQuota } from '@/src/types/quota';
 
 export default function PaymentsScreen() {
-  const { quotas } = useQuotas();
+  const { quotas, deleteQuotaById } = useQuotas();
+  const [quotaToDelete, setQuotaToDelete] = useState<UserQuota | null>(null);
+
+  const closeDeleteModal = () => setQuotaToDelete(null);
+
+  const handleConfirmDelete = async () => {
+    if (!quotaToDelete) {
+      return;
+    }
+
+    await deleteQuotaById(quotaToDelete.id);
+    closeDeleteModal();
+  };
 
   return (
     <Screen>
-      <FlatList
-        data={quotas}
-        keyExtractor={(item) => item.id}
-        renderItem={({ item }) => <UserQuotaRow userQuota={item} />}
-        contentContainerStyle={styles.listContent}
-        ItemSeparatorComponent={() => <View style={styles.separator} />}
-        showsVerticalScrollIndicator={false}
+      <ActionList quotas={quotas} deleteFeature onRequestDelete={setQuotaToDelete} />
+
+      <DeleteConfirmationModal
+        visible={Boolean(quotaToDelete)}
+        title="Delete payment"
+        message={`Are you sure you want to delete payment of ${quotaToDelete?.name ?? 'this user'}?`}
+        cancelLabel="Cancel"
+        confirmLabel="Delete"
+        cancelAccessibilityLabel="Cancel delete payment"
+        confirmAccessibilityLabel="Confirm delete payment"
+        onCancel={closeDeleteModal}
+        onConfirm={() => {
+          void handleConfirmDelete();
+        }}
       />
     </Screen>
   );
 }
-
-const styles = StyleSheet.create({
-  listContent: {
-    marginTop: 10,
-    paddingBottom: 10,
-  },
-  separator: {
-    height: 8,
-  },
-});

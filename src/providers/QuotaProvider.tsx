@@ -1,11 +1,13 @@
 import { createContext, PropsWithChildren, useCallback, useContext, useMemo, useState } from 'react';
 
 import { mockQuotas } from '@/src/data/mockPayments';
+import { requestDeleteQuota } from '@/src/data/quotaApi';
 import { UserQuota } from '@/src/types/quota';
 
 type QuotaContextValue = {
   quotas: UserQuota[];
   addPaidQuota: (name: string, amount: number) => void;
+  deleteQuotaById: (quotaId: string) => Promise<void>;
 };
 
 const QuotaContext = createContext<QuotaContextValue | undefined>(undefined);
@@ -28,12 +30,18 @@ export function QuotaProvider({ children }: PropsWithChildren) {
     ]);
   }, []);
 
+  const deleteQuotaById = useCallback(async (quotaId: string) => {
+    await requestDeleteQuota(quotaId);
+    setQuotas((currentQuotas) => currentQuotas.filter((quota) => quota.id !== quotaId));
+  }, []);
+
   const value = useMemo(
     () => ({
       quotas,
       addPaidQuota,
+      deleteQuotaById,
     }),
-    [quotas, addPaidQuota],
+    [quotas, addPaidQuota, deleteQuotaById],
   );
 
   return <QuotaContext.Provider value={value}>{children}</QuotaContext.Provider>;

@@ -1,4 +1,5 @@
 import { Stack } from 'expo-router';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import 'react-native-reanimated';
 
 import { NavigationThemeProvider } from '@/src/providers/NavigationThemeProvider';
@@ -15,11 +16,13 @@ export const unstable_settings = {
 
 export default function RootLayout() {
   return (
-    <AppThemeProvider>
-      <QuotaProvider>
-        <RootLayoutNav />
-      </QuotaProvider>
-    </AppThemeProvider>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <AppThemeProvider>
+        <QuotaProvider>
+          <RootLayoutNav />
+        </QuotaProvider>
+      </AppThemeProvider>
+    </GestureHandlerRootView>
   );
 }
 
