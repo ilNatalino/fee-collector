@@ -1,26 +1,23 @@
 import { Ionicons } from '@expo/vector-icons';
-import { type ComponentProps, type ComponentType, useEffect, useRef } from 'react';
+import { type ComponentProps, type ReactNode, useEffect, useRef } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 import ReanimatedSwipeable from 'react-native-gesture-handler/ReanimatedSwipeable';
 
 import { useTheme } from '@/src/hooks/useTheme';
-import { UserQuota } from '@/src/types/quota';
 
-import { type UserQuotaListItemProps } from './UserQuotaListItem';
-
-export type ListRowAction = {
+export type ListItemAction = {
   title: string;
   icon: ComponentProps<typeof Ionicons>['name'];
   tone?: 'danger' | 'primary';
-  callback: (userQuota: UserQuota) => void;
+  callback: () => void;
 };
 
-type ListRowProps = Readonly<{
-  userQuota: UserQuota;
-  ItemComponent: ComponentType<UserQuotaListItemProps>;
-  actions?: ListRowAction[];
-  onRegisterCloser?: (quotaId: string, close: (() => void) | null) => void;
-  onSwipeableWillOpen?: (quotaId: string) => void;
+type ListItemProps = Readonly<{
+  id: string;
+  children: ReactNode;
+  actions?: ListItemAction[];
+  onRegisterCloser?: (id: string, close: (() => void) | null) => void;
+  onSwipeableWillOpen?: (id: string) => void;
 }>;
 
 type SwipeableRefMethods = {
@@ -30,17 +27,15 @@ type SwipeableRefMethods = {
   reset: () => void;
 };
 
-export function ListRow({
-  userQuota,
-  ItemComponent,
+export function ListItem({
+  id,
+  children,
   actions = [],
   onRegisterCloser,
   onSwipeableWillOpen,
-}: ListRowProps) {
+}: ListItemProps) {
   const { colors } = useTheme();
   const swipeableRef = useRef<SwipeableRefMethods | null>(null);
-  const formattedAmount = `${userQuota.amountDue.toFixed(2)}€`;
-  const insertedDate = new Date(userQuota.insertedDate).toLocaleDateString();
   const canSwipe = actions.length > 0;
 
   useEffect(() => {
@@ -48,14 +43,14 @@ export function ListRow({
       return;
     }
 
-    onRegisterCloser(userQuota.id, () => {
+    onRegisterCloser(id, () => {
       swipeableRef.current?.close();
     });
 
     return () => {
-      onRegisterCloser(userQuota.id, null);
+      onRegisterCloser(id, null);
     };
-  }, [canSwipe, onRegisterCloser, userQuota.id]);
+  }, [canSwipe, onRegisterCloser, id]);
 
   const renderRightActions = () => (
     <View style={styles.actionsContainer}>
@@ -64,11 +59,11 @@ export function ListRow({
           key={`${action.title}-${index}`}
           onPress={() => {
             swipeableRef.current?.close();
-            action.callback(userQuota);
+            action.callback();
           }}
           style={[styles.deleteAction, { backgroundColor: colors[action.tone ?? 'danger'] }]}
           accessibilityRole="button"
-          accessibilityLabel={`${action.title} ${userQuota.name}`}>
+          accessibilityLabel={`${action.title}`}>
           <Ionicons name={action.icon} size={18} color="#ffffff" />
           {/* <Text style={styles.deleteActionLabel}>{action.title}</Text> */}
         </Pressable>
@@ -76,10 +71,8 @@ export function ListRow({
     </View>
   );
 
-  const rowContent = <ItemComponent name={userQuota.name} insertedDate={insertedDate} amount={formattedAmount} />;
-
   if (!canSwipe) {
-    return rowContent;
+    return <>{children}</>;
   }
 
   return (
@@ -87,8 +80,8 @@ export function ListRow({
       ref={swipeableRef}
       overshootRight={false}
       renderRightActions={renderRightActions}
-      onSwipeableWillOpen={() => onSwipeableWillOpen?.(userQuota.id)}>
-      {rowContent}
+      onSwipeableWillOpen={() => onSwipeableWillOpen?.(id)}>
+      {children}
     </ReanimatedSwipeable>
   );
 }

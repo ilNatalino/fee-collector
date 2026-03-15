@@ -1,4 +1,3 @@
-import { Ionicons } from '@expo/vector-icons';
 import { StyleSheet, Text, View } from 'react-native';
 
 import { useTheme } from '@/src/hooks/useTheme';
@@ -29,7 +28,7 @@ export function ActivityItem({ activity }: ActivityItemProps) {
   return (
     <View style={[styles.row, { borderBottomColor: colors.border }]}>
       <View style={styles.left}>
-        <View
+        {/* <View
           style={[
             styles.iconContainer,
             {
@@ -41,7 +40,7 @@ export function ActivityItem({ activity }: ActivityItemProps) {
             size={18}
             color={isConfirmed ? colors.success : '#f59e0b'}
           />
-        </View>
+        </View> */}
         <View>
           <Text style={[styles.memberName, { color: colors.text }]}>{activity.memberName}</Text>
           <Text style={[styles.groupName, { color: colors.muted }]}>{activity.groupName}</Text>

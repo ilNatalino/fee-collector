@@ -8,6 +8,7 @@ import { DashboardStatCard } from '@/src/components/DashboardStatCard';
 import { GroupCard } from '@/src/components/GroupCard';
 import { GroupFormModal } from '@/src/components/GroupFormModal';
 import { Screen } from '@/src/components/Screen';
+import { SwipeableList } from '@/src/components/SwipeableList';
 import { useGroups } from '@/src/hooks/useGroups';
 import { useTheme } from '@/src/hooks/useTheme';
 import { getGroupsSummary } from '@/src/utils/groupMetrics';
@@ -83,11 +84,16 @@ export default function HomeScreen() {
           </Pressable>
         </View>
 
-        <View style={[styles.activityContainer, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-          {recentActivities.map((activity) => (
-            <ActivityItem key={activity.id} activity={activity} />
-          ))}
-        </View>
+        <SwipeableList
+          data={recentActivities}
+          keyExtractor={(item) => item.id}
+          renderItem={(activity) => <ActivityItem activity={activity} />}
+          contentContainerStyle={[
+            styles.activityContainer,
+            { backgroundColor: colors.surface, borderColor: colors.border },
+          ]}
+          scrollEnabled={false}
+        />
 
         <View style={styles.bottomSpacer} />
       </ScrollView>

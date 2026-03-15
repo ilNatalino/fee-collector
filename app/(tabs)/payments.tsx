@@ -1,9 +1,10 @@
 import { useState } from 'react';
 
-import { ActionList } from '@/src/components/ActionList';
 import { DeleteConfirmationModal } from '@/src/components/DeleteConfirmationModal';
 import { QuotaFormModal } from '@/src/components/QuotaFormModal';
 import { Screen } from '@/src/components/Screen';
+import { SwipeableList } from '@/src/components/SwipeableList';
+import { UserQuotaListItem } from '@/src/components/UserQuotaListItem';
 import { useQuotas } from '@/src/hooks/useQuotas';
 import { UserQuota } from '@/src/types/quota';
 
@@ -38,8 +39,16 @@ export default function PaymentsScreen() {
 
   return (
     <Screen>
-      <ActionList
-        quotas={quotas}
+      <SwipeableList
+        data={quotas}
+        keyExtractor={(item) => item.id}
+        renderItem={(item) => (
+          <UserQuotaListItem
+            name={item.name}
+            insertedDate={new Date(item.insertedDate).toLocaleDateString()}
+            amount={`${item.amountDue.toFixed(2)}€`}
+          />
+        )}
         editFeature
         onRequestEdit={setQuotaToEdit}
         deleteFeature
