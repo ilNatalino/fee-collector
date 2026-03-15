@@ -2,6 +2,7 @@ import { Stack } from 'expo-router';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import 'react-native-reanimated';
 
+import { GroupProvider } from '@/src/providers/GroupProvider';
 import { NavigationThemeProvider } from '@/src/providers/NavigationThemeProvider';
 import { QuotaProvider } from '@/src/providers/QuotaProvider';
 import { AppThemeProvider, useAppTheme } from '@/src/providers/ThemeProvider';
@@ -19,7 +20,9 @@ export default function RootLayout() {
     <GestureHandlerRootView style={{ flex: 1 }}>
       <AppThemeProvider>
         <QuotaProvider>
-          <RootLayoutNav />
+          <GroupProvider>
+            <RootLayoutNav />
+          </GroupProvider>
         </QuotaProvider>
       </AppThemeProvider>
     </GestureHandlerRootView>
@@ -33,6 +36,7 @@ function RootLayoutNav() {
     <NavigationThemeProvider value={navigationTheme}>
       <Stack>
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+        <Stack.Screen name="group/[id]" options={{ headerShown: false }} />
       </Stack>
     </NavigationThemeProvider>
   );

@@ -1,6 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Tabs } from 'expo-router';
 
+import { Header } from '@/src/components/Header';
 import { useTheme } from '@/src/hooks/useTheme';
 
 export default function TabLayout() {
@@ -9,10 +10,7 @@ export default function TabLayout() {
   return (
     <Tabs
       screenOptions={{
-        headerStyle: { backgroundColor: colors.surface },
-        headerTitleStyle: { color: colors.text },
-        headerShadowVisible: false,
-        headerTintColor: colors.text,
+        header: () => <Header />,
         tabBarStyle: {
           backgroundColor: colors.surface,
           borderTopColor: colors.border,
@@ -24,19 +22,20 @@ export default function TabLayout() {
       <Tabs.Screen
         name="index"
         options={{
-          title: 'Overview',
-          tabBarLabel: 'Home',
+          title: 'Dashboard',
+          tabBarLabel: 'Dashboard',
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name={isDark ? 'home' : 'home-outline'} color={color} size={size} />
+            <Ionicons name={isDark ? 'grid' : 'grid-outline'} color={color} size={size} />
           ),
         }}
       />
       <Tabs.Screen
         name="payments"
         options={{
-          title: 'Payments',
+          title: 'Activity Log',
+          tabBarLabel: 'Activity Log',
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name={isDark ? 'people' : 'people-outline'} color={color} size={size} />
+            <Ionicons name={isDark ? 'document-text' : 'document-text-outline'} color={color} size={size} />
           ),
         }}
       />
