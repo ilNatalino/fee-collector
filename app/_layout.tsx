@@ -4,8 +4,8 @@ import 'react-native-reanimated';
 
 import { GroupProvider } from '@/src/providers/GroupProvider';
 import { NavigationThemeProvider } from '@/src/providers/NavigationThemeProvider';
-import { QuotaProvider } from '@/src/providers/QuotaProvider';
 import { AppThemeProvider, useAppTheme } from '@/src/providers/ThemeProvider';
+import { UserActivityProvider } from '@/src/providers/UserActivityProvider';
 
 export {
   ErrorBoundary
@@ -19,11 +19,11 @@ export default function RootLayout() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <AppThemeProvider>
-        <QuotaProvider>
+        <UserActivityProvider>
           <GroupProvider>
             <RootLayoutNav />
           </GroupProvider>
-        </QuotaProvider>
+        </UserActivityProvider>
       </AppThemeProvider>
     </GestureHandlerRootView>
   );

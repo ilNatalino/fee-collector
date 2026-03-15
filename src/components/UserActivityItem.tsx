@@ -1,10 +1,9 @@
+import { useTheme } from '@/src/hooks/useTheme';
+import { UserActivity } from '@/src/types/userActivity';
 import { StyleSheet, Text, View } from 'react-native';
 
-import { useTheme } from '@/src/hooks/useTheme';
-import { ActivityEntry } from '@/src/types/group';
-
-type ActivityItemProps = {
-  activity: ActivityEntry;
+type UserActivityItemProps = {
+  activity: UserActivity;
 };
 
 function getTimeAgo(dateStr: string): string {
@@ -21,33 +20,21 @@ function getTimeAgo(dateStr: string): string {
   return `${diffDays}d ago`;
 }
 
-export function ActivityItem({ activity }: ActivityItemProps) {
+export function UserActivityItem({ activity }: UserActivityItemProps) {
   const { colors } = useTheme();
-  const isConfirmed = activity.status === 'confirmed';
 
   return (
-    <View style={[styles.row, { borderBottomColor: colors.border }]}>
+    <View style={[styles.row, { borderBottomColor: colors.border, backgroundColor: colors.surface }]}>
       <View style={styles.left}>
-        {/* <View
-          style={[
-            styles.iconContainer,
-            {
-              backgroundColor: isConfirmed ? colors.success + '18' : '#f59e0b18',
-            },
-          ]}>
-          <Ionicons
-            name={isConfirmed ? 'checkmark' : 'time-outline'}
-            size={18}
-            color={isConfirmed ? colors.success : '#f59e0b'}
-          />
-        </View> */}
         <View>
           <Text style={[styles.memberName, { color: colors.text }]}>{activity.memberName}</Text>
-          <Text style={[styles.groupName, { color: colors.muted }]}>{activity.groupName}</Text>
+          {activity.groupName && (
+            <Text style={[styles.groupName, { color: colors.muted }]}>{activity.groupName}</Text>
+          )}
         </View>
       </View>
       <View style={styles.right}>
-        <Text style={[styles.amount, { color: colors.success }]}>+€{activity.amount}</Text>
+        <Text style={[styles.amount, { color: colors.success }]}>+€{activity.amount.toFixed(2)}</Text>
         <Text style={[styles.time, { color: colors.muted }]}>{getTimeAgo(activity.date)}</Text>
       </View>
     </View>
@@ -60,19 +47,14 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingVertical: 14,
+    paddingHorizontal: 12,
     borderBottomWidth: StyleSheet.hairlineWidth,
+    borderRadius: 16,
   },
   left: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
-  },
-  iconContainer: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    alignItems: 'center',
-    justifyContent: 'center',
   },
   memberName: {
     fontSize: 15,

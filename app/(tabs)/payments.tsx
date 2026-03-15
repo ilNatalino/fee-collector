@@ -4,35 +4,35 @@ import { DeleteConfirmationModal } from '@/src/components/DeleteConfirmationModa
 import { QuotaFormModal } from '@/src/components/QuotaFormModal';
 import { Screen } from '@/src/components/Screen';
 import { SwipeableList } from '@/src/components/SwipeableList';
-import { UserQuotaListItem } from '@/src/components/UserQuotaListItem';
-import { useQuotas } from '@/src/hooks/useQuotas';
-import { UserQuota } from '@/src/types/quota';
+import { UserActivityItem } from '@/src/components/UserActivityItem';
+import { useUserActivities } from '@/src/hooks/useUserActivities';
+import { UserActivity } from '@/src/types/userActivity';
 
 export default function PaymentsScreen() {
-  const { quotas, deleteQuotaById, updateQuotaById } = useQuotas();
-  const [quotaToDelete, setQuotaToDelete] = useState<UserQuota | null>(null);
-  const [quotaToEdit, setQuotaToEdit] = useState<UserQuota | null>(null);
+  const { activities, deleteActivityById, updateActivityById } = useUserActivities();
+  const [activityToDelete, setActivityToDelete] = useState<UserActivity | null>(null);
+  const [activityToEdit, setActivityToEdit] = useState<UserActivity | null>(null);
 
-  const closeDeleteModal = () => setQuotaToDelete(null);
-  const closeEditModal = () => setQuotaToEdit(null);
+  const closeDeleteModal = () => setActivityToDelete(null);
+  const closeEditModal = () => setActivityToEdit(null);
 
   const handleConfirmDelete = async () => {
-    if (!quotaToDelete) {
+    if (!activityToDelete) {
       return;
     }
 
-    await deleteQuotaById(quotaToDelete.id);
+    await deleteActivityById(activityToDelete.id);
     closeDeleteModal();
   };
 
   const handleConfirmEdit = async ({ name, amount }: { name: string; amount: number }) => {
-    if (!quotaToEdit) {
+    if (!activityToEdit) {
       return;
     }
 
-    await updateQuotaById(quotaToEdit.id, {
-      name,
-      amountDue: amount,
+    await updateActivityById(activityToEdit.id, {
+      memberName: name,
+      amount: amount,
     });
     closeEditModal();
   };
@@ -40,29 +40,23 @@ export default function PaymentsScreen() {
   return (
     <Screen>
       <SwipeableList
-        data={quotas}
+        data={activities}
         keyExtractor={(item) => item.id}
-        renderItem={(item) => (
-          <UserQuotaListItem
-            name={item.name}
-            insertedDate={new Date(item.insertedDate).toLocaleDateString()}
-            amount={`${item.amountDue.toFixed(2)}€`}
-          />
-        )}
+        renderItem={(item) => <UserActivityItem activity={item} />}
         editFeature
-        onRequestEdit={setQuotaToEdit}
+        onRequestEdit={setActivityToEdit}
         deleteFeature
-        onRequestDelete={setQuotaToDelete}
+        onRequestDelete={setActivityToDelete}
       />
 
       <QuotaFormModal
-        visible={Boolean(quotaToEdit)}
-        title="Edit payment"
+        visible={Boolean(activityToEdit)}
+        title="Edit activity"
         confirmLabel="Save"
-        cancelAccessibilityLabel="Cancel edit payment"
-        confirmAccessibilityLabel="Confirm edit payment"
-        initialName={quotaToEdit?.name}
-        initialAmount={quotaToEdit?.amountDue}
+        cancelAccessibilityLabel="Cancel edit activity"
+        confirmAccessibilityLabel="Confirm edit activity"
+        initialName={activityToEdit?.memberName}
+        initialAmount={activityToEdit?.amount}
         onCancel={closeEditModal}
         onSubmit={(payload) => {
           void handleConfirmEdit(payload);
@@ -70,13 +64,13 @@ export default function PaymentsScreen() {
       />
 
       <DeleteConfirmationModal
-        visible={Boolean(quotaToDelete)}
-        title="Delete payment"
-        message={`Are you sure you want to delete payment of ${quotaToDelete?.name ?? 'this user'}?`}
+        visible={Boolean(activityToDelete)}
+        title="Delete activity"
+        message={`Are you sure you want to delete activity of ${activityToDelete?.memberName ?? 'this user'}?`}
         cancelLabel="Cancel"
         confirmLabel="Delete"
-        cancelAccessibilityLabel="Cancel delete payment"
-        confirmAccessibilityLabel="Confirm delete payment"
+        cancelAccessibilityLabel="Cancel delete activity"
+        confirmAccessibilityLabel="Confirm delete activity"
         onCancel={closeDeleteModal}
         onConfirm={() => {
           void handleConfirmDelete();

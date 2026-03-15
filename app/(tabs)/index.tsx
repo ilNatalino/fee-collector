@@ -3,19 +3,21 @@ import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { Ionicons } from '@expo/vector-icons';
 
-import { ActivityItem } from '@/src/components/ActivityItem';
 import { DashboardStatCard } from '@/src/components/DashboardStatCard';
 import { GroupCard } from '@/src/components/GroupCard';
 import { GroupFormModal } from '@/src/components/GroupFormModal';
 import { Screen } from '@/src/components/Screen';
 import { SwipeableList } from '@/src/components/SwipeableList';
+import { UserActivityItem } from '@/src/components/UserActivityItem';
 import { useGroups } from '@/src/hooks/useGroups';
 import { useTheme } from '@/src/hooks/useTheme';
+import { useUserActivities } from '@/src/hooks/useUserActivities';
 import { getGroupsSummary } from '@/src/utils/groupMetrics';
 
 export default function HomeScreen() {
   const { colors } = useTheme();
-  const { groups, activities, addGroup } = useGroups();
+  const { groups, addGroup } = useGroups();
+  const { activities } = useUserActivities();
   const summary = getGroupsSummary(groups);
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -87,12 +89,14 @@ export default function HomeScreen() {
         <SwipeableList
           data={recentActivities}
           keyExtractor={(item) => item.id}
-          renderItem={(activity) => <ActivityItem activity={activity} />}
+          renderItem={(activity) => <UserActivityItem activity={activity} />}
           contentContainerStyle={[
             styles.activityContainer,
             { backgroundColor: colors.surface, borderColor: colors.border },
           ]}
           scrollEnabled={false}
+          editFeature={false}
+          deleteFeature={false}
         />
 
         <View style={styles.bottomSpacer} />

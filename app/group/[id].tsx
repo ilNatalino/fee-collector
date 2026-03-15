@@ -3,9 +3,10 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { ActivityItem } from '@/src/components/ActivityItem';
+import { UserActivityItem } from '@/src/components/UserActivityItem';
 import { useGroups } from '@/src/hooks/useGroups';
 import { useTheme } from '@/src/hooks/useTheme';
+import { UserActivity } from '@/src/types/userActivity';
 import { getGroupProgress } from '@/src/utils/groupMetrics';
 
 export default function GroupDetailsScreen() {
@@ -164,7 +165,7 @@ export default function GroupDetailsScreen() {
 
           <View style={[styles.activityContainer, { backgroundColor: colors.surface, borderColor: colors.border }]}>
             {groupActivities.map((activity) => (
-              <ActivityItem key={activity.id} activity={activity} />
+              <UserActivityItem key={activity.id} activity={activity as UserActivity} />
             ))}
             {groupActivities.length === 0 && (
               <Text style={[styles.emptyText, { color: colors.muted, padding: 16 }]}>No recent activity</Text>

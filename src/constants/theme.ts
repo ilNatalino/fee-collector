@@ -28,7 +28,7 @@ const lightColors: ThemeColors = {
 
 const darkColors: ThemeColors = {
   background: '#0b1220',
-  surface: '#111827',
+  surface: '#1e293b',
   text: '#f8fafc',
   muted: '#94a3b8',
   primary: '#60a5fa',
