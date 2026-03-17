@@ -20,15 +20,15 @@ export function GroupCard({ group, style }: GroupCardProps) {
 
   return (
     <Pressable onPress={() => router.push(`/group/${group.id}`)} style={style}>
-      <View style={[styles.card, { backgroundColor: colors.text === '#f8fafc' ? '#1e293b' : '#1e293b' }]}>
+      <View style={[styles.card, { backgroundColor: colors.surface }]}>
       <View style={styles.header}>
         <View style={styles.headerLeft}>
-          <View style={styles.emojiContainer}>
+          <View style={[styles.emojiContainer, { backgroundColor: colors.border }]}>
             <Text style={styles.emoji}>{group.emoji}</Text>
           </View>
           <View>
-            <Text style={styles.title}>{group.name}</Text>
-            <Text style={styles.subtitle}>
+            <Text style={[styles.title, { color: colors.text }]}>{group.name}</Text>
+            <Text style={[styles.subtitle, { color: colors.muted }]}>
               {dateStr} · {progress.totalMembers} members
             </Text>
           </View>
@@ -38,7 +38,7 @@ export function GroupCard({ group, style }: GroupCardProps) {
         </View>
       </View>
 
-      <View style={styles.progressBarContainer}>
+      <View style={[styles.progressBarContainer, { backgroundColor: colors.border }]}>
         <View
           style={[
             styles.progressBar,
@@ -53,15 +53,15 @@ export function GroupCard({ group, style }: GroupCardProps) {
             <Text style={[styles.collectedAmount, { color: colors.primary }]}>
               €{progress.collectedAmount}
             </Text>
-            <Text style={styles.totalAmount}> / €{group.totalAmount}</Text>
+            <Text style={[styles.totalAmount, { color: colors.muted }]}> / €{group.totalAmount}</Text>
           </Text>
-          <Text style={styles.memberCount}>
+          <Text style={[styles.memberCount, { color: colors.muted }]}>
             {progress.paidMembers} / {progress.totalMembers} paid
           </Text>
         </View>
         <View style={styles.remainingContainer}>
-          <Text style={styles.remainingLabel}>Remaining</Text>
-          <Text style={styles.remainingAmount}>€{progress.remainingAmount}</Text>
+          <Text style={[styles.remainingLabel, { color: colors.muted }]}>Remaining</Text>
+          <Text style={[styles.remainingAmount, { color: colors.danger || colors.text }]}>€{progress.remainingAmount}</Text>
         </View>
       </View>
     </View>
@@ -90,7 +90,6 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: 'rgba(255,255,255,0.1)',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -98,12 +97,10 @@ const styles = StyleSheet.create({
     fontSize: 20,
   },
   title: {
-    color: '#ffffff',
     fontSize: 16,
     fontWeight: '700',
   },
   subtitle: {
-    color: '#94a3b8',
     fontSize: 12,
     marginTop: 2,
   },
@@ -119,7 +116,6 @@ const styles = StyleSheet.create({
   progressBarContainer: {
     height: 6,
     borderRadius: 3,
-    backgroundColor: 'rgba(255,255,255,0.15)',
     marginBottom: 12,
   },
   progressBar: {
@@ -139,11 +135,9 @@ const styles = StyleSheet.create({
     fontSize: 15,
   },
   totalAmount: {
-    color: '#94a3b8',
     fontSize: 14,
   },
   memberCount: {
-    color: '#94a3b8',
     fontSize: 12,
     marginTop: 2,
   },
@@ -151,11 +145,9 @@ const styles = StyleSheet.create({
     alignItems: 'flex-end',
   },
   remainingLabel: {
-    color: '#94a3b8',
     fontSize: 12,
   },
   remainingAmount: {
-    color: '#ef4444',
     fontSize: 15,
     fontWeight: '700',
   },
