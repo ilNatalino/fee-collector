@@ -70,7 +70,7 @@ export function ListItem({
               swipeableRef.current?.close();
               action.callback();
             }}
-            className={`min-w-[50px] rounded-2xl items-center justify-center flex-row gap-x-1.5 ml-2 ${TONE_CLASSES[action.tone ?? 'danger']}`}
+            className={`min-w-[50px] max-h-[55px] rounded-2xl items-center justify-center flex-row gap-x-1.5 ml-2 ${TONE_CLASSES[action.tone ?? 'danger']}`}
             accessibilityRole="button"
             accessibilityLabel={action.title}
           >
