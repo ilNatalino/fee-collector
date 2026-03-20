@@ -1,14 +1,17 @@
+import '../global.css';
+
 import { Stack } from 'expo-router';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import 'react-native-reanimated';
 
+import { getNavigationTheme } from '@/src/constants/theme';
+import { ColorSchemeProvider, useColorSchemeContext } from '@/src/providers/ColorSchemeProvider';
 import { GroupProvider } from '@/src/providers/GroupProvider';
 import { NavigationThemeProvider } from '@/src/providers/NavigationThemeProvider';
-import { AppThemeProvider, useAppTheme } from '@/src/providers/ThemeProvider';
 import { UserActivityProvider } from '@/src/providers/UserActivityProvider';
 
 export {
-  ErrorBoundary
+    ErrorBoundary
 } from 'expo-router';
 
 export const unstable_settings = {
@@ -18,19 +21,20 @@ export const unstable_settings = {
 export default function RootLayout() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
-      <AppThemeProvider>
+      <ColorSchemeProvider>
         <UserActivityProvider>
           <GroupProvider>
             <RootLayoutNav />
           </GroupProvider>
         </UserActivityProvider>
-      </AppThemeProvider>
+      </ColorSchemeProvider>
     </GestureHandlerRootView>
   );
 }
 
 function RootLayoutNav() {
-  const { navigationTheme } = useAppTheme();
+  const { colorScheme } = useColorSchemeContext();
+  const navigationTheme = getNavigationTheme(colorScheme);
 
   return (
     <NavigationThemeProvider value={navigationTheme}>

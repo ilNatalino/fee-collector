@@ -1,49 +1,30 @@
-import { StyleSheet, Switch, Text, View } from 'react-native';
+import { useColorScheme } from 'nativewind';
+import { Switch, Text, View } from 'react-native';
 
 import { Screen } from '@/src/components/Screen';
-import { useTheme } from '@/src/hooks/useTheme';
+import { useColorSchemeContext } from '@/src/providers/ColorSchemeProvider';
 
 export default function SettingsScreen() {
-  const { colors, isDark, toggleTheme } = useTheme();
+  const { colorScheme } = useColorScheme();
+  const { toggleTheme } = useColorSchemeContext();
+  const isDark = colorScheme === 'dark';
 
   return (
     <Screen>
-      <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-        <View style={styles.row}>
+      <View className="border border-zinc-200 dark:border-zinc-800 rounded-2xl p-4 mt-2.5 bg-white dark:bg-zinc-900">
+        <View className="flex-row items-center justify-between">
           <View>
-            <Text style={[styles.title, { color: colors.text }]}>Dark mode</Text>
-            <Text style={[styles.description, { color: colors.muted }]}>Use a dark visual theme</Text>
+            <Text className="text-base font-semibold text-zinc-900 dark:text-zinc-100">Dark mode</Text>
+            <Text className="mt-1 text-[13px] text-zinc-400 dark:text-zinc-500">Use a dark visual theme</Text>
           </View>
           <Switch
             value={isDark}
             onValueChange={toggleTheme}
-            trackColor={{ false: colors.track, true: `${colors.primary}99` }}
-            thumbColor={isDark ? colors.primary : '#ffffff'}
+            trackColor={{ false: '#e4e4e7', true: '#6366f199' }}
+            thumbColor={isDark ? '#818cf8' : '#ffffff'}
           />
         </View>
       </View>
     </Screen>
   );
 }
-
-const styles = StyleSheet.create({
-  card: {
-    borderWidth: 1,
-    borderRadius: 16,
-    padding: 16,
-    marginTop: 10
-  },
-  row: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  title: {
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  description: {
-    marginTop: 4,
-    fontSize: 13,
-  },
-});

@@ -1,23 +1,24 @@
-import { Ionicons } from '@expo/vector-icons';
 import { Tabs } from 'expo-router';
+import { FileText, LayoutGrid, Settings } from 'lucide-react-native';
+import { useColorScheme } from 'nativewind';
 
 import { Header } from '@/src/components/Header';
-import { useTheme } from '@/src/hooks/useTheme';
 
 export default function TabLayout() {
-  const { colors, isDark } = useTheme();
+  const { colorScheme } = useColorScheme();
+  const isDark = colorScheme === 'dark';
 
   return (
     <Tabs
       screenOptions={{
         header: () => <Header />,
         tabBarStyle: {
-          backgroundColor: colors.surface,
-          borderTopColor: colors.border,
+          backgroundColor: isDark ? '#18181b' : '#ffffff',
+          borderTopColor: isDark ? '#27272a' : '#e4e4e7',
         },
-        tabBarActiveTintColor: colors.primary,
-        tabBarInactiveTintColor: colors.muted,
-        sceneStyle: { backgroundColor: colors.background },
+        tabBarActiveTintColor: isDark ? '#818cf8' : '#6366f1',
+        tabBarInactiveTintColor: isDark ? '#71717a' : '#a1a1aa',
+        sceneStyle: { backgroundColor: isDark ? '#09090b' : '#fafafa' },
       }}>
       <Tabs.Screen
         name="index"
@@ -25,7 +26,7 @@ export default function TabLayout() {
           title: 'Dashboard',
           tabBarLabel: 'Dashboard',
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name={isDark ? 'grid' : 'grid-outline'} color={color} size={size} />
+            <LayoutGrid color={color} size={size} />
           ),
         }}
       />
@@ -35,7 +36,7 @@ export default function TabLayout() {
           title: 'Activity Log',
           tabBarLabel: 'Activity Log',
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name={isDark ? 'document-text' : 'document-text-outline'} color={color} size={size} />
+            <FileText color={color} size={size} />
           ),
         }}
       />
@@ -44,7 +45,7 @@ export default function TabLayout() {
         options={{
           title: 'Settings',
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name={isDark ? 'settings' : 'settings-outline'} color={color} size={size} />
+            <Settings color={color} size={size} />
           ),
         }}
       />

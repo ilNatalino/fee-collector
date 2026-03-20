@@ -1,5 +1,5 @@
 import { type ReactNode, useCallback, useRef } from 'react';
-import { FlatList, StyleProp, StyleSheet, View, ViewStyle } from 'react-native';
+import { FlatList, StyleProp, View, ViewStyle } from 'react-native';
 
 import { ListItem, type ListItemAction } from './ListItem';
 
@@ -16,7 +16,7 @@ type SwipeableListProps<T> = Readonly<{
 }>;
 
 function ItemSeparator() {
-  return <View style={styles.separator} />;
+  return <View className="h-2" />;
 }
 
 export function SwipeableList<T>({
@@ -92,20 +92,10 @@ export function SwipeableList<T>({
           </ListItem>
         );
       }}
-      contentContainerStyle={contentContainerStyle ?? styles.listContent}
+      contentContainerStyle={contentContainerStyle ?? { marginTop: 10, paddingBottom: 10 }}
       ItemSeparatorComponent={ItemSeparator}
       showsVerticalScrollIndicator={false}
       scrollEnabled={scrollEnabled}
     />
   );
 }
-
-const styles = StyleSheet.create({
-  listContent: {
-    marginTop: 10,
-    paddingBottom: 10,
-  },
-  separator: {
-    height: 8,
-  },
-});

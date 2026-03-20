@@ -1,8 +1,9 @@
-import { Ionicons } from '@expo/vector-icons';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Bell } from 'lucide-react-native';
+import { MotiView } from 'moti';
+import { Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { useTheme } from '@/src/hooks/useTheme';
+import { AnimatedPressable } from './AnimatedPressable';
 
 function getGreeting(): string {
   const hour = new Date().getHours();
@@ -12,66 +13,32 @@ function getGreeting(): string {
 }
 
 export function Header() {
-  const { colors } = useTheme();
   const insets = useSafeAreaInsets();
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.background, paddingTop: insets.top }]}>
-      <View style={styles.header}>
-        <Text style={[styles.greeting, { color: colors.muted }]}>{getGreeting()}</Text>
-        <View style={styles.headerIcons}>
-          <Pressable
-            style={[styles.iconButton, { backgroundColor: colors.surface, borderColor: colors.border }]}
-            accessibilityLabel="Notifications">
-            <Ionicons name="notifications-outline" size={20} color={colors.text} />
-          </Pressable>
-          <View style={[styles.avatar, { backgroundColor: colors.primary }]}>
-            <Text style={styles.avatarText}>FM</Text>
+    <MotiView
+      from={{ opacity: 0, translateY: -8 }}
+      animate={{ opacity: 1, translateY: 0 }}
+      transition={{ type: 'timing', duration: 400 }}
+      className="bg-zinc-50 dark:bg-zinc-950"
+      style={{ paddingTop: insets.top }}
+    >
+      <View className="flex-row justify-between items-center px-5 py-3">
+        <Text className="text-base font-light text-zinc-400 dark:text-zinc-500">
+          {getGreeting()}
+        </Text>
+        <View className="flex-row items-center gap-x-3">
+          <AnimatedPressable
+            className="w-10 h-10 rounded-full items-center justify-center border-[0.5px] border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900"
+            accessibilityLabel="Notifications"
+          >
+            <Bell size={18} className="text-zinc-600 dark:text-zinc-400" />
+          </AnimatedPressable>
+          <View className="w-10 h-10 rounded-full items-center justify-center bg-indigo-500">
+            <Text className="text-white text-sm font-bold">FM</Text>
           </View>
         </View>
       </View>
-    </View>
+    </MotiView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    // We only apply paddingTop from insets
-  },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-  },
-  greeting: {
-    fontSize: 16,
-    fontWeight: '500',
-  },
-  headerIcons: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-  },
-  iconButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    borderWidth: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  avatar: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  avatarText: {
-    color: '#ffffff',
-    fontSize: 14,
-    fontWeight: '700',
-  },
-});

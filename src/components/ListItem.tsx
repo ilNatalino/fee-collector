@@ -1,13 +1,11 @@
-import { Ionicons } from '@expo/vector-icons';
-import { type ComponentProps, type ReactNode, useEffect, useRef } from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { Pencil, Trash2 } from 'lucide-react-native';
+import { type ReactNode, useEffect, useRef } from 'react';
+import { Pressable, View } from 'react-native';
 import ReanimatedSwipeable from 'react-native-gesture-handler/ReanimatedSwipeable';
-
-import { useTheme } from '@/src/hooks/useTheme';
 
 export type ListItemAction = {
   title: string;
-  icon: ComponentProps<typeof Ionicons>['name'];
+  icon: 'pencil' | 'trash';
   tone?: 'danger' | 'primary';
   callback: () => void;
 };
@@ -27,6 +25,16 @@ type SwipeableRefMethods = {
   reset: () => void;
 };
 
+const ICON_MAP = {
+  pencil: Pencil,
+  trash: Trash2,
+} as const;
+
+const TONE_CLASSES = {
+  danger: 'bg-red-500',
+  primary: 'bg-indigo-500',
+} as const;
+
 export function ListItem({
   id,
   children,
@@ -34,7 +42,6 @@ export function ListItem({
   onRegisterCloser,
   onSwipeableWillOpen,
 }: ListItemProps) {
-  const { colors } = useTheme();
   const swipeableRef = useRef<SwipeableRefMethods | null>(null);
   const canSwipe = actions.length > 0;
 
@@ -53,21 +60,24 @@ export function ListItem({
   }, [canSwipe, onRegisterCloser, id]);
 
   const renderRightActions = () => (
-    <View style={styles.actionsContainer}>
-      {actions.map((action, index) => (
-        <Pressable
-          key={`${action.title}-${index}`}
-          onPress={() => {
-            swipeableRef.current?.close();
-            action.callback();
-          }}
-          style={[styles.deleteAction, { backgroundColor: colors[action.tone ?? 'danger'] }]}
-          accessibilityRole="button"
-          accessibilityLabel={`${action.title}`}>
-          <Ionicons name={action.icon} size={18} color="#ffffff" />
-          {/* <Text style={styles.deleteActionLabel}>{action.title}</Text> */}
-        </Pressable>
-      ))}
+    <View className="flex-row">
+      {actions.map((action, index) => {
+        const Icon = ICON_MAP[action.icon];
+        return (
+          <Pressable
+            key={`${action.title}-${index}`}
+            onPress={() => {
+              swipeableRef.current?.close();
+              action.callback();
+            }}
+            className={`min-w-[50px] rounded-2xl items-center justify-center flex-row gap-x-1.5 ml-2 ${TONE_CLASSES[action.tone ?? 'danger']}`}
+            accessibilityRole="button"
+            accessibilityLabel={action.title}
+          >
+            <Icon size={16} color="#ffffff" />
+          </Pressable>
+        );
+      })}
     </View>
   );
 
@@ -80,28 +90,9 @@ export function ListItem({
       ref={swipeableRef}
       overshootRight={false}
       renderRightActions={renderRightActions}
-      onSwipeableWillOpen={() => onSwipeableWillOpen?.(id)}>
+      onSwipeableWillOpen={() => onSwipeableWillOpen?.(id)}
+    >
       {children}
     </ReanimatedSwipeable>
   );
 }
-
-const styles = StyleSheet.create({
-  actionsContainer: {
-    flexDirection: 'row',
-  },
-  deleteAction: {
-    minWidth: 50,
-    borderRadius: 16,
-    alignItems: 'center',
-    justifyContent: 'center',
-    flexDirection: 'row',
-    gap: 6,
-    marginLeft: 8,
-  },
-  deleteActionLabel: {
-    color: '#ffffff',
-    fontSize: 14,
-    fontWeight: '700',
-  },
-});

@@ -1,9 +1,8 @@
+import { CirclePlus, XCircle } from 'lucide-react-native';
+import { MotiView } from 'moti';
+import { useColorScheme } from 'nativewind';
 import { useEffect, useState } from 'react';
-import { Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
-
-import { Ionicons } from '@expo/vector-icons';
-
-import { useTheme } from '@/src/hooks/useTheme';
+import { Modal, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
 
 type MemberInput = {
   key: string;
@@ -27,7 +26,8 @@ const EMOJI_OPTIONS = ['🎁', '🍽️', '🎂', '✈️', '🎉', '🏠', '�
 const createMemberKey = () => `m-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
 
 export function GroupFormModal({ visible, onCancel, onSubmit }: GroupFormModalProps) {
-  const { colors } = useTheme();
+  const { colorScheme } = useColorScheme();
+  const isDark = colorScheme === 'dark';
   const [groupName, setGroupName] = useState('');
   const [selectedEmoji, setSelectedEmoji] = useState(EMOJI_OPTIONS[0]);
   const [totalAmount, setTotalAmount] = useState('');
@@ -90,208 +90,110 @@ export function GroupFormModal({ visible, onCancel, onSubmit }: GroupFormModalPr
     });
   };
 
+  const primaryColor = isDark ? '#818cf8' : '#6366f1';
+
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onCancel}>
-      <View style={styles.backdrop}>
-        <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-          <Text style={[styles.title, { color: colors.text }]}>New Group</Text>
+      <View className="flex-1 justify-center px-[18px] bg-black/30">
+        <MotiView
+          from={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ type: 'timing', duration: 200 }}
+        >
+          <View className="border border-zinc-200 dark:border-zinc-800 rounded-2xl p-4 gap-y-2.5 bg-white dark:bg-zinc-900 max-h-[85%]">
+            <Text className="text-lg font-bold text-zinc-900 dark:text-zinc-100 mb-1">New Group</Text>
 
-          <TextInput
-            value={groupName}
-            onChangeText={(v) => { setGroupName(v); setError(null); }}
-            placeholder="Group name (e.g. Birthday party)"
-            placeholderTextColor={colors.muted}
-            style={[styles.input, { color: colors.text, borderColor: colors.border }]}
-          />
+            <TextInput
+              value={groupName}
+              onChangeText={(v) => { setGroupName(v); setError(null); }}
+              placeholder="Group name (e.g. Birthday party)"
+              placeholderTextColor="#a1a1aa"
+              className="border border-zinc-200 dark:border-zinc-800 rounded-xl px-3 py-2.5 text-sm text-zinc-900 dark:text-zinc-100"
+            />
 
-          <Text style={[styles.label, { color: colors.muted }]}>Choose an icon</Text>
-          <View style={styles.emojiRow}>
-            {EMOJI_OPTIONS.map((emoji) => (
-              <Pressable
-                key={emoji}
-                onPress={() => setSelectedEmoji(emoji)}
-                style={[
-                  styles.emojiItem,
-                  {
-                    borderColor: emoji === selectedEmoji ? colors.primary : colors.border,
-                    backgroundColor: emoji === selectedEmoji ? colors.primary + '18' : 'transparent',
-                  },
-                ]}>
-                <Text style={styles.emojiText}>{emoji}</Text>
+            <Text className="text-[13px] font-medium text-zinc-400 dark:text-zinc-500">Choose an icon</Text>
+            <View className="flex-row gap-2 flex-wrap">
+              {EMOJI_OPTIONS.map((emoji) => (
+                <Pressable
+                  key={emoji}
+                  onPress={() => setSelectedEmoji(emoji)}
+                  className={`w-[38px] h-[38px] rounded-[10px] border-[1.5px] items-center justify-center ${
+                    emoji === selectedEmoji
+                      ? 'border-indigo-500 dark:border-indigo-400 bg-indigo-500/10 dark:bg-indigo-400/10'
+                      : 'border-zinc-200 dark:border-zinc-800'
+                  }`}
+                >
+                  <Text className="text-lg">{emoji}</Text>
+                </Pressable>
+              ))}
+            </View>
+
+            <TextInput
+              value={totalAmount}
+              onChangeText={(v) => { setTotalAmount(v); setError(null); }}
+              placeholder="Total amount (€)"
+              placeholderTextColor="#a1a1aa"
+              keyboardType="decimal-pad"
+              className="border border-zinc-200 dark:border-zinc-800 rounded-xl px-3 py-2.5 text-sm text-zinc-900 dark:text-zinc-100"
+            />
+
+            <View className="flex-row justify-between items-center">
+              <Text className="text-[13px] font-medium text-zinc-400 dark:text-zinc-500">Members</Text>
+              <Pressable onPress={addMember} accessibilityLabel="Add member">
+                <CirclePlus size={22} color={primaryColor} />
               </Pressable>
-            ))}
+            </View>
+
+            <ScrollView style={{ maxHeight: 160 }} nestedScrollEnabled>
+              {members.map((member) => (
+                <View key={member.key} className="flex-row gap-x-2 items-center mb-2">
+                  <TextInput
+                    value={member.name}
+                    onChangeText={(v) => updateMember(member.key, 'name', v)}
+                    placeholder="Name"
+                    placeholderTextColor="#a1a1aa"
+                    className="flex-1 border border-zinc-200 dark:border-zinc-800 rounded-[10px] px-2.5 py-2 text-[13px] text-zinc-900 dark:text-zinc-100"
+                  />
+                  <TextInput
+                    value={member.amount}
+                    onChangeText={(v) => updateMember(member.key, 'amount', v)}
+                    placeholder="€"
+                    placeholderTextColor="#a1a1aa"
+                    keyboardType="decimal-pad"
+                    className="w-[70px] border border-zinc-200 dark:border-zinc-800 rounded-[10px] px-2.5 py-2 text-[13px] text-zinc-900 dark:text-zinc-100"
+                  />
+                  {members.length > 1 ? (
+                    <Pressable onPress={() => removeMember(member.key)} accessibilityLabel="Remove member">
+                      <XCircle size={20} color="#ef4444" />
+                    </Pressable>
+                  ) : null}
+                </View>
+              ))}
+            </ScrollView>
+
+            {error ? <Text className="text-xs text-red-500 dark:text-red-400">{error}</Text> : null}
+
+            <View className="mt-1 flex-row justify-end gap-x-2.5">
+              <Pressable
+                onPress={onCancel}
+                className="border border-zinc-200 dark:border-zinc-800 rounded-xl py-2 px-3.5"
+                accessibilityRole="button"
+                accessibilityLabel="Cancel create group"
+              >
+                <Text className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">Cancel</Text>
+              </Pressable>
+              <Pressable
+                onPress={handleSubmit}
+                className="bg-indigo-500 dark:bg-indigo-400 rounded-xl py-2 px-3.5"
+                accessibilityRole="button"
+                accessibilityLabel="Create group"
+              >
+                <Text className="text-sm font-bold text-white">Create</Text>
+              </Pressable>
+            </View>
           </View>
-
-          <TextInput
-            value={totalAmount}
-            onChangeText={(v) => { setTotalAmount(v); setError(null); }}
-            placeholder="Total amount (€)"
-            placeholderTextColor={colors.muted}
-            keyboardType="decimal-pad"
-            style={[styles.input, { color: colors.text, borderColor: colors.border }]}
-          />
-
-          <View style={styles.membersHeader}>
-            <Text style={[styles.label, { color: colors.muted }]}>Members</Text>
-            <Pressable onPress={addMember} accessibilityLabel="Add member">
-              <Ionicons name="add-circle-outline" size={22} color={colors.primary} />
-            </Pressable>
-          </View>
-
-          <ScrollView style={styles.membersList} nestedScrollEnabled>
-            {members.map((member) => (
-              <View key={member.key} style={styles.memberRow}>
-                <TextInput
-                  value={member.name}
-                  onChangeText={(v) => updateMember(member.key, 'name', v)}
-                  placeholder="Name"
-                  placeholderTextColor={colors.muted}
-                  style={[styles.memberNameInput, { color: colors.text, borderColor: colors.border }]}
-                />
-                <TextInput
-                  value={member.amount}
-                  onChangeText={(v) => updateMember(member.key, 'amount', v)}
-                  placeholder="€"
-                  placeholderTextColor={colors.muted}
-                  keyboardType="decimal-pad"
-                  style={[styles.memberAmountInput, { color: colors.text, borderColor: colors.border }]}
-                />
-                {members.length > 1 ? (
-                  <Pressable onPress={() => removeMember(member.key)} accessibilityLabel="Remove member">
-                    <Ionicons name="close-circle" size={20} color={colors.danger} />
-                  </Pressable>
-                ) : null}
-              </View>
-            ))}
-          </ScrollView>
-
-          {error ? <Text style={[styles.errorText, { color: colors.danger }]}>{error}</Text> : null}
-
-          <View style={styles.actions}>
-            <Pressable
-              onPress={onCancel}
-              style={[styles.secondaryButton, { borderColor: colors.border }]}
-              accessibilityRole="button"
-              accessibilityLabel="Cancel create group">
-              <Text style={[styles.secondaryButtonLabel, { color: colors.text }]}>Cancel</Text>
-            </Pressable>
-            <Pressable
-              onPress={handleSubmit}
-              style={[styles.primaryButton, { backgroundColor: colors.primary }]}
-              accessibilityRole="button"
-              accessibilityLabel="Create group">
-              <Text style={styles.primaryButtonLabel}>Create</Text>
-            </Pressable>
-          </View>
-        </View>
+        </MotiView>
       </View>
     </Modal>
   );
 }
-
-const styles = StyleSheet.create({
-  backdrop: {
-    flex: 1,
-    justifyContent: 'center',
-    paddingHorizontal: 18,
-    backgroundColor: '#00000055',
-  },
-  card: {
-    borderWidth: 1,
-    borderRadius: 16,
-    padding: 16,
-    gap: 10,
-    maxHeight: '85%',
-  },
-  title: {
-    fontSize: 18,
-    fontWeight: '700',
-    marginBottom: 4,
-  },
-  label: {
-    fontSize: 13,
-    fontWeight: '500',
-  },
-  input: {
-    borderWidth: 1,
-    borderRadius: 12,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    fontSize: 14,
-  },
-  emojiRow: {
-    flexDirection: 'row',
-    gap: 8,
-    flexWrap: 'wrap',
-  },
-  emojiItem: {
-    width: 38,
-    height: 38,
-    borderRadius: 10,
-    borderWidth: 1.5,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  emojiText: {
-    fontSize: 18,
-  },
-  membersHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  membersList: {
-    maxHeight: 160,
-  },
-  memberRow: {
-    flexDirection: 'row',
-    gap: 8,
-    alignItems: 'center',
-    marginBottom: 8,
-  },
-  memberNameInput: {
-    flex: 1,
-    borderWidth: 1,
-    borderRadius: 10,
-    paddingHorizontal: 10,
-    paddingVertical: 8,
-    fontSize: 13,
-  },
-  memberAmountInput: {
-    width: 70,
-    borderWidth: 1,
-    borderRadius: 10,
-    paddingHorizontal: 10,
-    paddingVertical: 8,
-    fontSize: 13,
-  },
-  errorText: {
-    fontSize: 12,
-  },
-  actions: {
-    marginTop: 4,
-    flexDirection: 'row',
-    justifyContent: 'flex-end',
-    gap: 10,
-  },
-  secondaryButton: {
-    borderWidth: 1,
-    borderRadius: 10,
-    paddingVertical: 8,
-    paddingHorizontal: 14,
-  },
-  secondaryButtonLabel: {
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  primaryButton: {
-    borderRadius: 10,
-    paddingVertical: 8,
-    paddingHorizontal: 14,
-  },
-  primaryButtonLabel: {
-    color: '#ffffff',
-    fontSize: 14,
-    fontWeight: '700',
-  },
-});

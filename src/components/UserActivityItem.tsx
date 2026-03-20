@@ -1,6 +1,5 @@
-import { useTheme } from '@/src/hooks/useTheme';
 import { UserActivity } from '@/src/types/userActivity';
-import { StyleSheet, Text, View } from 'react-native';
+import { Text, View } from 'react-native';
 
 type UserActivityItemProps = {
   activity: UserActivity;
@@ -21,58 +20,28 @@ function getTimeAgo(dateStr: string): string {
 }
 
 export function UserActivityItem({ activity }: UserActivityItemProps) {
-  const { colors } = useTheme();
-
   return (
-    <View style={[styles.row, { borderBottomColor: colors.border, backgroundColor: colors.surface }]}>
-      <View style={styles.left}>
+    <View className="flex-row justify-between items-center py-3.5 px-3 border-b border-zinc-100 dark:border-zinc-800/50 bg-white dark:bg-zinc-900 rounded-2xl">
+      <View className="flex-row items-center gap-x-3">
         <View>
-          <Text style={[styles.memberName, { color: colors.text }]}>{activity.memberName}</Text>
-          {activity.groupName && (
-            <Text style={[styles.groupName, { color: colors.muted }]}>{activity.groupName}</Text>
-          )}
+          <Text className="text-[15px] font-semibold text-zinc-900 dark:text-zinc-100 mb-0.5">
+            {activity.memberName}
+          </Text>
+          {activity.groupName ? (
+            <Text className="text-[13px] text-zinc-400 dark:text-zinc-500">
+              {activity.groupName}
+            </Text>
+          ) : null}
         </View>
       </View>
-      <View style={styles.right}>
-        <Text style={[styles.amount, { color: colors.success }]}>+€{activity.amount.toFixed(2)}</Text>
-        <Text style={[styles.time, { color: colors.muted }]}>{getTimeAgo(activity.date)}</Text>
+      <View className="items-end">
+        <Text className="text-[15px] font-bold text-emerald-500 dark:text-emerald-400">
+          +€{activity.amount.toFixed(2)}
+        </Text>
+        <Text className="text-xs text-zinc-400 dark:text-zinc-500 mt-0.5">
+          {getTimeAgo(activity.date)}
+        </Text>
       </View>
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  row: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: 14,
-    paddingHorizontal: 12,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderRadius: 16,
-  },
-  left: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-  },
-  memberName: {
-    fontSize: 15,
-    fontWeight: '600',
-    marginBottom: 2,
-  },
-  groupName: {
-    fontSize: 13,
-  },
-  right: {
-    alignItems: 'flex-end',
-  },
-  amount: {
-    fontSize: 15,
-    fontWeight: '700',
-  },
-  time: {
-    fontSize: 12,
-    marginTop: 2,
-  },
-});

@@ -1,7 +1,6 @@
+import { MotiView } from 'moti';
 import { useEffect, useState } from 'react';
-import { Modal, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
-
-import { useTheme } from '@/src/hooks/useTheme';
+import { Modal, Pressable, Text, TextInput, View } from 'react-native';
 
 type QuotaFormModalProps = Readonly<{
   visible: boolean;
@@ -28,7 +27,6 @@ export function QuotaFormModal({
   onCancel,
   onSubmit,
 }: QuotaFormModalProps) {
-  const { colors } = useTheme();
   const [nameInput, setNameInput] = useState('');
   const [amountInput, setAmountInput] = useState('');
   const [amountError, setAmountError] = useState<string | null>(null);
@@ -59,109 +57,63 @@ export function QuotaFormModal({
 
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onCancel}>
-      <View style={styles.modalBackdrop}>
-        <View style={[styles.modalCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-          <Text style={[styles.modalTitle, { color: colors.text }]}>{title}</Text>
+      <View className="flex-1 justify-center px-[18px] bg-black/30">
+        <MotiView
+          from={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ type: 'timing', duration: 200 }}
+        >
+          <View className="border border-zinc-200 dark:border-zinc-800 rounded-2xl p-4 gap-y-2.5 bg-white dark:bg-zinc-900">
+            <Text className="text-lg font-bold text-zinc-900 dark:text-zinc-100 mb-1">{title}</Text>
 
-          <TextInput
-            value={nameInput}
-            onChangeText={setNameInput}
-            placeholder="Name"
-            placeholderTextColor={colors.muted}
-            style={[styles.input, { color: colors.text, borderColor: colors.border }]}
-          />
+            <TextInput
+              value={nameInput}
+              onChangeText={setNameInput}
+              placeholder="Name"
+              placeholderTextColor="#a1a1aa"
+              className="border border-zinc-200 dark:border-zinc-800 rounded-xl px-3 py-2.5 text-sm text-zinc-900 dark:text-zinc-100"
+            />
 
-          <TextInput
-            value={amountInput}
-            onChangeText={(value) => {
-              setAmountInput(value);
-              if (amountError) {
-                setAmountError(null);
-              }
-            }}
-            placeholder="Amount (€)"
-            placeholderTextColor={colors.muted}
-            keyboardType="decimal-pad"
-            style={[styles.input, { color: colors.text, borderColor: colors.border }]}
-          />
+            <TextInput
+              value={amountInput}
+              onChangeText={(value) => {
+                setAmountInput(value);
+                if (amountError) {
+                  setAmountError(null);
+                }
+              }}
+              placeholder="Amount (€)"
+              placeholderTextColor="#a1a1aa"
+              keyboardType="decimal-pad"
+              className="border border-zinc-200 dark:border-zinc-800 rounded-xl px-3 py-2.5 text-sm text-zinc-900 dark:text-zinc-100"
+            />
 
-          {amountError ? <Text style={[styles.errorText, { color: colors.danger }]}>{amountError}</Text> : null}
+            {amountError ? (
+              <Text className="text-xs text-red-500 dark:text-red-400">{amountError}</Text>
+            ) : null}
 
-          <View style={styles.modalActions}>
-            <Pressable
-              onPress={onCancel}
-              style={[styles.secondaryButton, { borderColor: colors.border }]}
-              accessibilityRole="button"
-              accessibilityLabel={cancelAccessibilityLabel}>
-              <Text style={[styles.secondaryButtonLabel, { color: colors.text }]}>{cancelLabel}</Text>
-            </Pressable>
+            <View className="mt-1 flex-row justify-end gap-x-2.5">
+              <Pressable
+                onPress={onCancel}
+                className="border border-zinc-200 dark:border-zinc-800 rounded-xl py-2 px-3.5"
+                accessibilityRole="button"
+                accessibilityLabel={cancelAccessibilityLabel}
+              >
+                <Text className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">{cancelLabel}</Text>
+              </Pressable>
 
-            <Pressable
-              onPress={handleSave}
-              style={[styles.primaryButton, { backgroundColor: colors.primary }]}
-              accessibilityRole="button"
-              accessibilityLabel={confirmAccessibilityLabel}>
-              <Text style={styles.primaryButtonLabel}>{confirmLabel}</Text>
-            </Pressable>
+              <Pressable
+                onPress={handleSave}
+                className="bg-indigo-500 dark:bg-indigo-400 rounded-xl py-2 px-3.5"
+                accessibilityRole="button"
+                accessibilityLabel={confirmAccessibilityLabel}
+              >
+                <Text className="text-sm font-bold text-white">{confirmLabel}</Text>
+              </Pressable>
+            </View>
           </View>
-        </View>
+        </MotiView>
       </View>
     </Modal>
   );
 }
-
-const styles = StyleSheet.create({
-  modalBackdrop: {
-    flex: 1,
-    justifyContent: 'center',
-    paddingHorizontal: 18,
-    backgroundColor: '#00000055',
-  },
-  modalCard: {
-    borderWidth: 1,
-    borderRadius: 16,
-    padding: 16,
-    gap: 10,
-  },
-  modalTitle: {
-    fontSize: 18,
-    fontWeight: '700',
-    marginBottom: 4,
-  },
-  input: {
-    borderWidth: 1,
-    borderRadius: 12,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    fontSize: 14,
-  },
-  errorText: {
-    fontSize: 12,
-  },
-  modalActions: {
-    marginTop: 4,
-    flexDirection: 'row',
-    justifyContent: 'flex-end',
-    gap: 10,
-  },
-  secondaryButton: {
-    borderWidth: 1,
-    borderRadius: 10,
-    paddingVertical: 8,
-    paddingHorizontal: 14,
-  },
-  secondaryButtonLabel: {
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  primaryButton: {
-    borderRadius: 10,
-    paddingVertical: 8,
-    paddingHorizontal: 14,
-  },
-  primaryButtonLabel: {
-    color: '#ffffff',
-    fontSize: 14,
-    fontWeight: '700',
-  },
-});

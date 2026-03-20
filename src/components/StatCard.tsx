@@ -1,38 +1,30 @@
-import { StyleSheet, Text, View } from 'react-native';
-
-import { useTheme } from '@/src/hooks/useTheme';
+import { MotiView } from 'moti';
+import { Text } from 'react-native';
 
 type StatCardProps = {
   label: string;
   value: string;
   valueColor?: string;
+  delay?: number;
 };
 
-export function StatCard({ label, value, valueColor }: StatCardProps) {
-  const { colors } = useTheme();
-
+export function StatCard({ label, value, valueColor, delay = 0 }: StatCardProps) {
   return (
-    <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-      <Text style={[styles.label, { color: colors.muted }]}>{label}</Text>
-      <Text style={[styles.value, { color: valueColor ?? colors.text }]}>{value}</Text>
-    </View>
+    <MotiView
+      from={{ opacity: 0, translateY: 12 }}
+      animate={{ opacity: 1, translateY: 0 }}
+      transition={{ type: 'timing', duration: 500, delay }}
+      className="w-[48.5%] rounded-4xl border-[0.5px] border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 py-4 px-3.5"
+    >
+      <Text className="text-xs uppercase tracking-widest text-zinc-400 dark:text-zinc-500 mb-2">
+        {label}
+      </Text>
+      <Text
+        className="text-2xl font-light text-zinc-900 dark:text-zinc-100"
+        style={valueColor ? { color: valueColor } : undefined}
+      >
+        {value}
+      </Text>
+    </MotiView>
   );
 }
-
-const styles = StyleSheet.create({
-  card: {
-    width: '48.5%',
-    borderWidth: 1,
-    borderRadius: 16,
-    paddingVertical: 14,
-    paddingHorizontal: 12,
-  },
-  label: {
-    fontSize: 12,
-    marginBottom: 6,
-  },
-  value: {
-    fontSize: 22,
-    fontWeight: '700',
-  },
-});

@@ -1,21 +1,18 @@
+import { Plus } from 'lucide-react-native';
 import { useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ScrollView, Text, View } from 'react-native';
 
-import { Ionicons } from '@expo/vector-icons';
-
-import { DashboardStatCard } from '@/src/components/DashboardStatCard';
+import { AnimatedPressable } from '@/src/components/AnimatedPressable';
 import { GroupCard } from '@/src/components/GroupCard';
 import { GroupFormModal } from '@/src/components/GroupFormModal';
 import { Screen } from '@/src/components/Screen';
 import { SwipeableList } from '@/src/components/SwipeableList';
 import { UserActivityItem } from '@/src/components/UserActivityItem';
 import { useGroups } from '@/src/hooks/useGroups';
-import { useTheme } from '@/src/hooks/useTheme';
 import { useUserActivities } from '@/src/hooks/useUserActivities';
 import { getGroupsSummary } from '@/src/utils/groupMetrics';
 
 export default function HomeScreen() {
-  const { colors } = useTheme();
   const { groups, addGroup } = useGroups();
   const { activities } = useUserActivities();
   const summary = getGroupsSummary(groups);
@@ -38,78 +35,87 @@ export default function HomeScreen() {
 
   return (
     <Screen>
-      <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
+      <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
 
         {/* Stats row */}
-        <View style={styles.statsRow}>
+        {/* <View className="flex-row gap-x-2 mb-5">
           <DashboardStatCard
             label="Groups"
             value={`${summary.totalGroups}`}
             subLabel={`${summary.activeGroups} Active`}
+            delay={0}
           />
           <DashboardStatCard
             label="Collected"
             value={`€${summary.totalCollected}`}
             subLabel={`↑ +€${summary.todayCollected} today`}
+            delay={80}
           />
           <DashboardStatCard
             label="Pending"
             value={`${summary.totalPendingMembers}`}
             subLabel="members"
-            subLabelColor={colors.muted}
+            delay={160}
           />
-        </View>
+        </View> */}
 
         {/* Active groups */}
-        <View style={styles.sectionHeader}>
-          <Text style={[styles.sectionTitle, { color: colors.muted }]}>ACTIVE GROUPS</Text>
-          <Pressable onPress={() => {}} accessibilityLabel="See all groups">
-            <Text style={[styles.seeAll, { color: colors.primary }]}>See all</Text>
-          </Pressable>
+        <View className="flex-row justify-between items-center mb-3">
+          <Text className="text-[10px] uppercase tracking-widest font-bold text-zinc-400 dark:text-zinc-500">
+            ACTIVE GROUPS
+          </Text>
+          <AnimatedPressable onPress={() => {}} accessibilityLabel="See all groups">
+            <Text className="text-[13px] font-semibold text-indigo-500 dark:text-indigo-400">See all</Text>
+          </AnimatedPressable>
         </View>
 
-        {filteredGroups.map((group) => (
-          <GroupCard key={group.id} group={group} />
+        {filteredGroups.map((group, index) => (
+          <GroupCard key={group.id} group={group} delay={index * 60} />
         ))}
 
         {filteredGroups.length === 0 && (
-          <Text style={[styles.emptyText, { color: colors.muted }]}>
+          <Text className="text-center text-sm py-5 text-zinc-400 dark:text-zinc-500">
             {searchQuery.trim() ? 'No groups match your search' : 'No active groups'}
           </Text>
         )}
 
         {/* Recent activity */}
-        <View style={styles.sectionHeader}>
-          <Text style={[styles.sectionTitle, { color: colors.muted }]}>RECENT ACTIVITY</Text>
-          <Pressable accessibilityLabel="View all activity">
-            <Text style={[styles.seeAll, { color: colors.primary }]}>View all</Text>
-          </Pressable>
+        <View className="flex-row justify-between items-center mb-3 mt-2">
+          <Text className="text-[10px] uppercase tracking-widest font-bold text-zinc-400 dark:text-zinc-500">
+            RECENT ACTIVITY
+          </Text>
+          <AnimatedPressable accessibilityLabel="View all activity">
+            <Text className="text-[13px] font-semibold text-indigo-500 dark:text-indigo-400">View all</Text>
+          </AnimatedPressable>
         </View>
 
         <SwipeableList
           data={recentActivities}
           keyExtractor={(item) => item.id}
           renderItem={(activity) => <UserActivityItem activity={activity} />}
-          contentContainerStyle={[
-            styles.activityContainer,
-            { backgroundColor: colors.surface, borderColor: colors.border },
-          ]}
+          contentContainerStyle={{
+            borderRadius: 10,
+            paddingHorizontal: 0,
+            borderWidth: 0,
+            borderColor: undefined,
+          }}
           scrollEnabled={false}
           editFeature={false}
           deleteFeature={false}
         />
 
-        <View style={styles.bottomSpacer} />
+        <View className="h-20" />
       </ScrollView>
 
       {/* FAB */}
-      <Pressable
+      <AnimatedPressable
         onPress={() => setIsModalVisible(true)}
-        style={[styles.fab, { backgroundColor: colors.primary }]}
+        className="absolute right-4 bottom-5 w-14 h-14 rounded-full bg-indigo-500 dark:bg-indigo-400 items-center justify-center shadow-lg"
         accessibilityRole="button"
-        accessibilityLabel="Create new group">
-        <Ionicons name="add" size={28} color="#ffffff" />
-      </Pressable>
+        accessibilityLabel="Create new group"
+      >
+        <Plus size={28} color="#ffffff" />
+      </AnimatedPressable>
 
       <GroupFormModal
         visible={isModalVisible}
@@ -122,72 +128,3 @@ export default function HomeScreen() {
     </Screen>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  searchContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    borderRadius: 12,
-    borderWidth: 1,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    gap: 8,
-    marginBottom: 16,
-  },
-  searchInput: {
-    flex: 1,
-    fontSize: 14,
-    padding: 0,
-  },
-  statsRow: {
-    flexDirection: 'row',
-    gap: 8,
-    marginBottom: 20,
-  },
-  sectionHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  sectionTitle: {
-    fontSize: 12,
-    fontWeight: '700',
-    letterSpacing: 0.5,
-  },
-  seeAll: {
-    fontSize: 13,
-    fontWeight: '600',
-  },
-  emptyText: {
-    textAlign: 'center',
-    fontSize: 14,
-    paddingVertical: 20,
-  },
-  activityContainer: {
-    borderRadius: 12,
-    paddingHorizontal: 14,
-    borderWidth: 1,
-  },
-  bottomSpacer: {
-    height: 80,
-  },
-  fab: {
-    position: 'absolute',
-    right: 16,
-    bottom: 20,
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    alignItems: 'center',
-    justifyContent: 'center',
-    elevation: 4,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 4,
-  },
-});

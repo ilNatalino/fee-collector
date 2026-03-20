@@ -1,6 +1,5 @@
-import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
-
-import { useTheme } from '@/src/hooks/useTheme';
+import { MotiView } from 'moti';
+import { Modal, Pressable, Text, View } from 'react-native';
 
 type DeleteConfirmationModalProps = {
   visible: boolean;
@@ -25,83 +24,40 @@ export function DeleteConfirmationModal({
   confirmAccessibilityLabel,
   cancelAccessibilityLabel,
 }: DeleteConfirmationModalProps) {
-  const { colors } = useTheme();
-
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onCancel}>
-      <View style={styles.modalBackdrop}>
-        <View style={[styles.modalCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-          <Text style={[styles.modalTitle, { color: colors.text }]}>{title}</Text>
-          <Text style={[styles.modalBody, { color: colors.muted }]}>{message}</Text>
+      <View className="flex-1 justify-center px-[18px] bg-black/30">
+        <MotiView
+          from={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ type: 'timing', duration: 200 }}
+        >
+          <View className="border border-zinc-200 dark:border-zinc-800 rounded-2xl p-4 gap-y-2.5 bg-white dark:bg-zinc-900">
+            <Text className="text-lg font-bold text-zinc-900 dark:text-zinc-100">{title}</Text>
+            <Text className="text-sm leading-5 text-zinc-400 dark:text-zinc-500">{message}</Text>
 
-          <View style={styles.modalActions}>
-            <Pressable
-              onPress={onCancel}
-              style={[styles.secondaryButton, { borderColor: colors.border }]}
-              accessibilityRole="button"
-              accessibilityLabel={cancelAccessibilityLabel ?? cancelLabel}>
-              <Text style={[styles.secondaryButtonLabel, { color: colors.text }]}>{cancelLabel}</Text>
-            </Pressable>
+            <View className="mt-1 flex-row justify-end gap-x-2.5">
+              <Pressable
+                onPress={onCancel}
+                className="border border-zinc-200 dark:border-zinc-800 rounded-xl py-2 px-3.5"
+                accessibilityRole="button"
+                accessibilityLabel={cancelAccessibilityLabel ?? cancelLabel}
+              >
+                <Text className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">{cancelLabel}</Text>
+              </Pressable>
 
-            <Pressable
-              onPress={onConfirm}
-              style={[styles.deleteButton, { backgroundColor: colors.danger }]}
-              accessibilityRole="button"
-              accessibilityLabel={confirmAccessibilityLabel ?? confirmLabel}>
-              <Text style={styles.deleteButtonLabel}>{confirmLabel}</Text>
-            </Pressable>
+              <Pressable
+                onPress={onConfirm}
+                className="bg-red-500 rounded-xl py-2 px-3.5"
+                accessibilityRole="button"
+                accessibilityLabel={confirmAccessibilityLabel ?? confirmLabel}
+              >
+                <Text className="text-sm font-bold text-white">{confirmLabel}</Text>
+              </Pressable>
+            </View>
           </View>
-        </View>
+        </MotiView>
       </View>
     </Modal>
   );
 }
-
-const styles = StyleSheet.create({
-  modalBackdrop: {
-    flex: 1,
-    justifyContent: 'center',
-    paddingHorizontal: 18,
-    backgroundColor: '#00000055',
-  },
-  modalCard: {
-    borderWidth: 1,
-    borderRadius: 16,
-    padding: 16,
-    gap: 10,
-  },
-  modalTitle: {
-    fontSize: 18,
-    fontWeight: '700',
-  },
-  modalBody: {
-    fontSize: 14,
-    lineHeight: 20,
-  },
-  modalActions: {
-    marginTop: 4,
-    flexDirection: 'row',
-    justifyContent: 'flex-end',
-    gap: 10,
-  },
-  secondaryButton: {
-    borderWidth: 1,
-    borderRadius: 10,
-    paddingVertical: 8,
-    paddingHorizontal: 14,
-  },
-  secondaryButtonLabel: {
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  deleteButton: {
-    borderRadius: 10,
-    paddingVertical: 8,
-    paddingHorizontal: 14,
-  },
-  deleteButtonLabel: {
-    color: '#ffffff',
-    fontSize: 14,
-    fontWeight: '700',
-  },
-});

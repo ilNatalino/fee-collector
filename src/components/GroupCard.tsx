@@ -1,154 +1,88 @@
 import { useRouter } from 'expo-router';
-import { ComponentProps } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { MotiView } from 'moti';
+import { Text, View } from 'react-native';
 
-import { useTheme } from '@/src/hooks/useTheme';
 import { Group } from '@/src/types/group';
 import { getGroupProgress } from '@/src/utils/groupMetrics';
 
+import { AnimatedPressable } from './AnimatedPressable';
+
 type GroupCardProps = {
   group: Group;
-  style?: ComponentProps<typeof View>['style'];
+  delay?: number;
 };
 
-export function GroupCard({ group, style }: GroupCardProps) {
-  const { colors } = useTheme();
+export function GroupCard({ group, delay = 0 }: GroupCardProps) {
   const router = useRouter();
   const progress = getGroupProgress(group);
   const createdDate = new Date(group.createdDate);
-  const dateStr = group.dueDate ? `Due ${new Date(group.dueDate).getDate()} ${new Date(group.dueDate).toLocaleString('en', { month: 'short', year: 'numeric' })}` : `Created ${createdDate.getDate()} ${createdDate.toLocaleString('en', { month: 'short' })}`;
+  const dateStr = group.dueDate
+    ? `Due ${new Date(group.dueDate).getDate()} ${new Date(group.dueDate).toLocaleString('en', { month: 'short', year: 'numeric' })}`
+    : `Created ${createdDate.getDate()} ${createdDate.toLocaleString('en', { month: 'short' })}`;
 
   return (
-    <Pressable onPress={() => router.push(`/group/${group.id}`)} style={style}>
-      <View style={[styles.card, { backgroundColor: colors.surface }]}>
-      <View style={styles.header}>
-        <View style={styles.headerLeft}>
-          <View style={[styles.emojiContainer, { backgroundColor: colors.border }]}>
-            <Text style={styles.emoji}>{group.emoji}</Text>
+    <MotiView
+      from={{ opacity: 0, translateY: 16 }}
+      animate={{ opacity: 1, translateY: 0 }}
+      transition={{ type: 'timing', duration: 500, delay }}
+    >
+      <AnimatedPressable
+        onPress={() => router.push(`/group/${group.id}`)}
+        className="rounded-4xl bg-white dark:bg-zinc-900 p-5 mb-3"
+      >
+        {/* Header */}
+        <View className="flex-row justify-between items-center mb-4">
+          <View className="flex-row items-center gap-x-3">
+            <View className="w-10 h-10 rounded-full bg-zinc-100 dark:bg-zinc-800 items-center justify-center">
+              <Text className="text-xl">{group.emoji}</Text>
+            </View>
+            <View>
+              <Text className="text-base font-semibold text-zinc-900 dark:text-zinc-100">
+                {group.name}
+              </Text>
+              <Text className="text-xs text-zinc-400 dark:text-zinc-500 mt-0.5">
+                {dateStr} · {progress.totalMembers} members
+              </Text>
+            </View>
           </View>
+          <View className="rounded-xl bg-indigo-500/10 dark:bg-indigo-400/10 px-3 py-1">
+            <Text className="text-sm font-bold text-indigo-500 dark:text-indigo-400">
+              {progress.progress}%
+            </Text>
+          </View>
+        </View>
+
+        {/* Progress bar */}
+        <View className="h-1.5 rounded-full bg-zinc-100 dark:bg-zinc-800 mb-4">
+          <View
+            className="h-1.5 rounded-full bg-indigo-500 dark:bg-indigo-400"
+            style={{ width: `${progress.progress}%` }}
+          />
+        </View>
+
+        {/* Footer */}
+        <View className="flex-row justify-between items-end">
           <View>
-            <Text style={[styles.title, { color: colors.text }]}>{group.name}</Text>
-            <Text style={[styles.subtitle, { color: colors.muted }]}>
-              {dateStr} · {progress.totalMembers} members
+            <Text className="text-sm">
+              <Text className="font-bold text-indigo-500 dark:text-indigo-400">
+                €{progress.collectedAmount}
+              </Text>
+              <Text className="text-zinc-400 dark:text-zinc-500"> / €{group.totalAmount}</Text>
+            </Text>
+            <Text className="text-xs text-zinc-400 dark:text-zinc-500 mt-0.5">
+              {progress.paidMembers} / {progress.totalMembers} paid
+            </Text>
+          </View>
+          <View className="items-end">
+            <Text className="text-[10px] uppercase tracking-widest text-zinc-400 dark:text-zinc-500">
+              Remaining
+            </Text>
+            <Text className="text-base font-bold text-red-500 dark:text-red-400">
+              €{progress.remainingAmount}
             </Text>
           </View>
         </View>
-        <View style={[styles.badge, { backgroundColor: colors.primary + '22' }]}>
-          <Text style={[styles.badgeText, { color: colors.primary }]}>{progress.progress}%</Text>
-        </View>
-      </View>
-
-      <View style={[styles.progressBarContainer, { backgroundColor: colors.border }]}>
-        <View
-          style={[
-            styles.progressBar,
-            { backgroundColor: colors.primary, width: `${progress.progress}%` },
-          ]}
-        />
-      </View>
-
-      <View style={styles.footer}>
-        <View>
-          <Text style={styles.amountRow}>
-            <Text style={[styles.collectedAmount, { color: colors.primary }]}>
-              €{progress.collectedAmount}
-            </Text>
-            <Text style={[styles.totalAmount, { color: colors.muted }]}> / €{group.totalAmount}</Text>
-          </Text>
-          <Text style={[styles.memberCount, { color: colors.muted }]}>
-            {progress.paidMembers} / {progress.totalMembers} paid
-          </Text>
-        </View>
-        <View style={styles.remainingContainer}>
-          <Text style={[styles.remainingLabel, { color: colors.muted }]}>Remaining</Text>
-          <Text style={[styles.remainingAmount, { color: colors.danger || colors.text }]}>€{progress.remainingAmount}</Text>
-        </View>
-      </View>
-    </View>
-    </Pressable>
+      </AnimatedPressable>
+    </MotiView>
   );
 }
-
-const styles = StyleSheet.create({
-  card: {
-    borderRadius: 16,
-    padding: 16,
-    marginBottom: 12,
-  },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  headerLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-  },
-  emojiContainer: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  emoji: {
-    fontSize: 20,
-  },
-  title: {
-    fontSize: 16,
-    fontWeight: '700',
-  },
-  subtitle: {
-    fontSize: 12,
-    marginTop: 2,
-  },
-  badge: {
-    borderRadius: 12,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-  },
-  badgeText: {
-    fontSize: 13,
-    fontWeight: '700',
-  },
-  progressBarContainer: {
-    height: 6,
-    borderRadius: 3,
-    marginBottom: 12,
-  },
-  progressBar: {
-    height: 6,
-    borderRadius: 3,
-  },
-  footer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-end',
-  },
-  amountRow: {
-    fontSize: 14,
-  },
-  collectedAmount: {
-    fontWeight: '700',
-    fontSize: 15,
-  },
-  totalAmount: {
-    fontSize: 14,
-  },
-  memberCount: {
-    fontSize: 12,
-    marginTop: 2,
-  },
-  remainingContainer: {
-    alignItems: 'flex-end',
-  },
-  remainingLabel: {
-    fontSize: 12,
-  },
-  remainingAmount: {
-    fontSize: 15,
-    fontWeight: '700',
-  },
-});

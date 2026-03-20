@@ -1,48 +1,34 @@
-import { StyleSheet, Text, View } from 'react-native';
-
-import { useTheme } from '@/src/hooks/useTheme';
+import { MotiView } from 'moti';
+import { Text } from 'react-native';
 
 type DashboardStatCardProps = {
   label: string;
   value: string;
   subLabel?: string;
   subLabelColor?: string;
+  delay?: number;
 };
 
-export function DashboardStatCard({ label, value, subLabel, subLabelColor }: DashboardStatCardProps) {
-  const { colors } = useTheme();
-
+export function DashboardStatCard({ label, value, subLabel, delay = 0 }: DashboardStatCardProps) {
   return (
-    <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-      <Text style={[styles.label, { color: colors.muted }]}>{label}</Text>
-      <Text style={[styles.value, { color: colors.text }]}>{value}</Text>
+    <MotiView
+      from={{ opacity: 0, translateY: 12 }}
+      animate={{ opacity: 1, translateY: 0 }}
+      transition={{ type: 'timing', duration: 500, delay }}
+      className="flex-1 rounded-3xl border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 py-4 px-3.5"
+    >
+      {/* center text */}
+      <Text className="text-[10px] uppercase tracking-widest text-zinc-400 dark:text-zinc-500 mb-1.5">
+        {label}
+      </Text>
+      <Text className="text-2xl font-light text-zinc-900 dark:text-zinc-100">
+        {value}
+      </Text>
       {subLabel ? (
-        <Text style={[styles.subLabel, { color: subLabelColor ?? colors.success }]}>{subLabel}</Text>
+        <Text className="text-[11px] font-medium text-emerald-500 dark:text-emerald-400 mt-1">
+          {subLabel}
+        </Text>
       ) : null}
-    </View>
+    </MotiView>
   );
 }
-
-const styles = StyleSheet.create({
-  card: {
-    flex: 1,
-    borderWidth: 1,
-    borderRadius: 12,
-    paddingVertical: 12,
-    paddingHorizontal: 10,
-  },
-  label: {
-    fontSize: 11,
-    fontWeight: '500',
-    marginBottom: 4,
-  },
-  value: {
-    fontSize: 22,
-    fontWeight: '800',
-  },
-  subLabel: {
-    fontSize: 11,
-    fontWeight: '500',
-    marginTop: 2,
-  },
-});
