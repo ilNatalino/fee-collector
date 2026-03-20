@@ -20,16 +20,16 @@ export function Header() {
       from={{ opacity: 0, translateY: -8 }}
       animate={{ opacity: 1, translateY: 0 }}
       transition={{ type: 'timing', duration: 400 }}
-      className="bg-zinc-50 dark:bg-zinc-950"
+      className="bg-zinc-100 dark:bg-zinc-950"
       style={{ paddingTop: insets.top }}
     >
       <View className="flex-row justify-between items-center px-5 py-3">
-        <Text className="text-base font-light text-zinc-400 dark:text-zinc-500">
+        <Text className="text-base font-light text-zinc-500 dark:text-zinc-400">
           {getGreeting()}
         </Text>
         <View className="flex-row items-center gap-x-3">
           <AnimatedPressable
-            className="w-10 h-10 rounded-full items-center justify-center border-[0.5px] border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900"
+            className="w-10 h-10 rounded-full items-center justify-center shadow-sm shadow-zinc-950/5 ring-1 ring-zinc-950/5 dark:ring-white/10 bg-white dark:bg-zinc-900"
             accessibilityLabel="Notifications"
           >
             <Bell size={18} className="text-zinc-600 dark:text-zinc-400" />

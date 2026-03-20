@@ -100,7 +100,7 @@ export function GroupFormModal({ visible, onCancel, onSubmit }: GroupFormModalPr
           animate={{ opacity: 1, scale: 1 }}
           transition={{ type: 'timing', duration: 200 }}
         >
-          <View className="border border-zinc-200 dark:border-zinc-800 rounded-2xl p-4 gap-y-2.5 bg-white dark:bg-zinc-900 max-h-[85%]">
+          <View className="shadow-lg shadow-zinc-950/10 ring-1 ring-zinc-950/5 dark:ring-white/10 rounded-2xl p-4 gap-y-2.5 bg-white dark:bg-zinc-900 max-h-[85%]">
             <Text className="text-lg font-bold text-zinc-900 dark:text-zinc-100 mb-1">New Group</Text>
 
             <TextInput
@@ -111,7 +111,7 @@ export function GroupFormModal({ visible, onCancel, onSubmit }: GroupFormModalPr
               className="border border-zinc-200 dark:border-zinc-800 rounded-xl px-3 py-2.5 text-sm text-zinc-900 dark:text-zinc-100"
             />
 
-            <Text className="text-[13px] font-medium text-zinc-400 dark:text-zinc-500">Choose an icon</Text>
+            <Text className="text-[13px] font-medium text-zinc-500 dark:text-zinc-400">Choose an icon</Text>
             <View className="flex-row gap-2 flex-wrap">
               {EMOJI_OPTIONS.map((emoji) => (
                 <Pressable
@@ -138,7 +138,7 @@ export function GroupFormModal({ visible, onCancel, onSubmit }: GroupFormModalPr
             />
 
             <View className="flex-row justify-between items-center">
-              <Text className="text-[13px] font-medium text-zinc-400 dark:text-zinc-500">Members</Text>
+              <Text className="text-[13px] font-medium text-zinc-500 dark:text-zinc-400">Members</Text>
               <Pressable onPress={addMember} accessibilityLabel="Add member">
                 <CirclePlus size={22} color={primaryColor} />
               </Pressable>

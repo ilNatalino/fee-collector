@@ -24,7 +24,7 @@ export const getNavigationTheme = (mode: ThemeMode): Theme => {
     ...base,
     colors: {
       ...base.colors,
-      background: '#fafafa',   // zinc-50
+      background: '#f4f4f5',   // zinc-100
       card: '#ffffff',         // white
       text: '#09090b',         // zinc-950
       border: '#e4e4e7',       // zinc-200

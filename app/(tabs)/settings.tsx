@@ -11,11 +11,11 @@ export default function SettingsScreen() {
 
   return (
     <Screen>
-      <View className="border border-zinc-200 dark:border-zinc-800 rounded-2xl p-4 mt-2.5 bg-white dark:bg-zinc-900">
+      <View className="shadow-sm shadow-zinc-950/5 rounded-2xl p-4 mt-2.5 bg-white dark:bg-zinc-900">
         <View className="flex-row items-center justify-between">
           <View>
             <Text className="text-base font-semibold text-zinc-900 dark:text-zinc-100">Dark mode</Text>
-            <Text className="mt-1 text-[13px] text-zinc-400 dark:text-zinc-500">Use a dark visual theme</Text>
+            <Text className="mt-1 text-[13px] text-zinc-500 dark:text-zinc-400">Use a dark visual theme</Text>
           </View>
           <Switch
             value={isDark}

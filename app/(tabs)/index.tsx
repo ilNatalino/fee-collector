@@ -61,7 +61,7 @@ export default function HomeScreen() {
 
         {/* Active groups */}
         <View className="flex-row justify-between items-center mb-3">
-          <Text className="text-[10px] uppercase tracking-widest font-bold text-zinc-400 dark:text-zinc-500">
+          <Text className="text-[10px] uppercase tracking-widest font-bold text-zinc-500 dark:text-zinc-400">
             ACTIVE GROUPS
           </Text>
           <AnimatedPressable onPress={() => {}} accessibilityLabel="See all groups">
@@ -74,14 +74,14 @@ export default function HomeScreen() {
         ))}
 
         {filteredGroups.length === 0 && (
-          <Text className="text-center text-sm py-5 text-zinc-400 dark:text-zinc-500">
+          <Text className="text-center text-sm py-5 text-zinc-500 dark:text-zinc-400">
             {searchQuery.trim() ? 'No groups match your search' : 'No active groups'}
           </Text>
         )}
 
         {/* Recent activity */}
         <View className="flex-row justify-between items-center mb-3 mt-2">
-          <Text className="text-[10px] uppercase tracking-widest font-bold text-zinc-400 dark:text-zinc-500">
+          <Text className="text-[10px] uppercase tracking-widest font-bold text-zinc-500 dark:text-zinc-400">
             RECENT ACTIVITY
           </Text>
           <AnimatedPressable accessibilityLabel="View all activity">

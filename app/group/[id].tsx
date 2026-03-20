@@ -23,7 +23,7 @@ export default function GroupDetailsScreen() {
 
   if (!group) {
     return (
-      <View className="flex-1 bg-zinc-50 dark:bg-zinc-950">
+      <View className="flex-1 bg-zinc-100 dark:bg-zinc-950">
         <SafeAreaView>
           <View className="flex-row items-center justify-between px-5 pt-3 pb-4">
             <Pressable onPress={() => router.back()} className="w-10 h-10 justify-center items-center">
@@ -66,20 +66,20 @@ export default function GroupDetailsScreen() {
   const iconColor = isDark ? '#f4f4f5' : '#18181b';
 
   return (
-    <View className="flex-1 bg-zinc-50 dark:bg-zinc-950">
+    <View className="flex-1 bg-zinc-100 dark:bg-zinc-950">
       <SafeAreaView>
         {/* Top Header */}
         <View className="flex-row items-center justify-between px-5 pt-3 pb-4">
           <AnimatedPressable
             onPress={() => router.back()}
-            className="w-10 h-10 rounded-xl items-center justify-center bg-white dark:bg-zinc-900"
+            className="w-10 h-10 rounded-xl items-center justify-center shadow-sm shadow-zinc-950/5 ring-1 ring-zinc-950/5 dark:ring-white/10 bg-white dark:bg-zinc-900"
           >
             <ChevronLeft size={24} color={iconColor} />
           </AnimatedPressable>
           <Text className="text-lg font-semibold flex-1 text-center text-zinc-900 dark:text-zinc-100" numberOfLines={1}>
             {group.name}
           </Text>
-          <AnimatedPressable className="w-10 h-10 rounded-xl items-center justify-center bg-white dark:bg-zinc-900">
+          <AnimatedPressable className="w-10 h-10 rounded-xl items-center justify-center shadow-sm shadow-zinc-950/5 ring-1 ring-zinc-950/5 dark:ring-white/10 bg-white dark:bg-zinc-900">
             <EllipsisVertical size={20} color={iconColor} />
           </AnimatedPressable>
         </View>
@@ -139,10 +139,10 @@ export default function GroupDetailsScreen() {
 
           {/* Actions */}
           <View className="flex-row mb-8 gap-x-3">
-            <AnimatedPressable className="flex-1 h-[50px] border border-zinc-200 dark:border-zinc-800 rounded-2xl flex-row items-center justify-center">
-              <Text className="text-[15px] font-semibold text-zinc-400 dark:text-zinc-500">Send reminder</Text>
+            <AnimatedPressable className="flex-1 h-[50px] rounded-2xl flex-row items-center justify-center">
+              <Text className="text-[15px] font-semibold text-zinc-500 dark:text-zinc-400">Send reminder</Text>
             </AnimatedPressable>
-            <AnimatedPressable className="flex-1 h-[50px] border border-zinc-200 dark:border-zinc-800 rounded-2xl flex-row items-center justify-center">
+            <AnimatedPressable className="flex-1 h-[50px] rounded-2xl flex-row items-center justify-center">
               <Plus size={16} color={iconColor} style={{ marginRight: 6 }} />
               <Text className="text-[15px] font-semibold text-zinc-900 dark:text-zinc-100">Add payment</Text>
             </AnimatedPressable>
@@ -150,7 +150,7 @@ export default function GroupDetailsScreen() {
 
           {/* Members */}
           <View className="flex-row justify-between items-center mb-4">
-            <Text className="text-[10px] uppercase tracking-widest font-bold text-zinc-400 dark:text-zinc-500">MEMBERS</Text>
+            <Text className="text-[10px] uppercase tracking-widest font-bold text-zinc-500 dark:text-zinc-400">MEMBERS</Text>
             <AnimatedPressable>
               <Text className="text-sm font-medium text-indigo-500 dark:text-indigo-400">Manage</Text>
             </AnimatedPressable>
@@ -164,25 +164,25 @@ export default function GroupDetailsScreen() {
                     {getInitials(member.name)}
                   </Text>
                 </View>
-                <Text className="text-xs text-center text-zinc-400 dark:text-zinc-500">{getFirstName(member.name)}</Text>
+                <Text className="text-xs text-center text-zinc-500 dark:text-zinc-400">{getFirstName(member.name)}</Text>
               </View>
             ))}
           </ScrollView>
 
           {/* Payment History */}
           <View className="flex-row justify-between items-center mb-4 mt-6">
-            <Text className="text-[10px] uppercase tracking-widest font-bold text-zinc-400 dark:text-zinc-500">PAYMENT HISTORY</Text>
+            <Text className="text-[10px] uppercase tracking-widest font-bold text-zinc-500 dark:text-zinc-400">PAYMENT HISTORY</Text>
             <AnimatedPressable>
               <Text className="text-sm font-medium text-indigo-500 dark:text-indigo-400">Export</Text>
             </AnimatedPressable>
           </View>
 
-          <View className="rounded-2xl px-3.5 border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 overflow-hidden">
+          <View className="rounded-2xl overflow-hidden">
             {groupActivities.map((activity) => (
               <UserActivityItem key={activity.id} activity={activity as UserActivity} />
             ))}
             {groupActivities.length === 0 && (
-              <Text className="text-sm text-center mt-3 p-4 text-zinc-400 dark:text-zinc-500">No recent activity</Text>
+              <Text className="text-sm text-center mt-3 p-4 text-zinc-500 dark:text-zinc-400">No recent activity</Text>
             )}
           </View>
 

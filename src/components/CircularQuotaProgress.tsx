@@ -58,12 +58,12 @@ export function CircularQuotaProgress({
           {Math.round(normalizedProgress)}%
         </Text>
         {centerLabel ? (
-          <Text className="mt-0.5 text-[13px] font-medium text-zinc-400 dark:text-zinc-500">
+          <Text className="mt-0.5 text-[13px] font-medium text-zinc-500 dark:text-zinc-400">
             {centerLabel}
           </Text>
         ) : null}
         {centerSubLabel ? (
-          <Text className="mt-0.5 text-xs text-zinc-400 dark:text-zinc-500">
+          <Text className="mt-0.5 text-xs text-zinc-500 dark:text-zinc-400">
             {centerSubLabel}
           </Text>
         ) : null}

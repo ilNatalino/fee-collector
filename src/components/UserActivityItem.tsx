@@ -21,7 +21,7 @@ function getTimeAgo(dateStr: string): string {
 
 export function UserActivityItem({ activity }: UserActivityItemProps) {
   return (
-    <View className="flex-row justify-between items-center py-3.5 px-3 border-b border-zinc-100 dark:border-zinc-800/50 bg-white dark:bg-zinc-900 rounded-2xl">
+    <View className="flex-row justify-between items-center py-3.5 px-3 mb-2 shadow-md shadow-zinc-950/5 bg-white rounded-2xl dark:bg-zinc-900">
       <View className="flex-row items-center gap-x-3">
         <View>
           <Text className="text-[15px] font-semibold text-zinc-900 dark:text-zinc-100 mb-0.5">
