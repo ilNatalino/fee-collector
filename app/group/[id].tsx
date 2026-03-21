@@ -1,15 +1,14 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { ChevronLeft, EllipsisVertical, Plus } from 'lucide-react-native';
-import { MotiView } from 'moti';
 import { useColorScheme } from 'nativewind';
 import { Pressable, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { AnimatedPressable } from '@/src/components/AnimatedPressable';
+import { GroupCard } from '@/src/components/GroupCard';
 import { UserActivityItem } from '@/src/components/UserActivityItem';
 import { useGroups } from '@/src/hooks/useGroups';
 import { UserActivity } from '@/src/types/userActivity';
-import { getGroupProgress } from '@/src/utils/groupMetrics';
 
 export default function GroupDetailsScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -37,18 +36,6 @@ export default function GroupDetailsScreen() {
         </SafeAreaView>
       </View>
     );
-  }
-
-  const progress = getGroupProgress(group);
-  const percentComplete = group.totalAmount > 0 ? Math.round((progress.collectedAmount / group.totalAmount) * 100) : 0;
-  
-  let dateStr = '';
-  if (group.dueDate) {
-    const due = new Date(group.dueDate);
-    dateStr = `Due ${due.getDate()} ${due.toLocaleString('en', { month: 'short', year: 'numeric' })}`;
-  } else {
-    const created = new Date(group.createdDate);
-    dateStr = `Created ${created.getDate()} ${created.toLocaleString('en', { month: 'short', year: 'numeric' })}`;
   }
 
   const getInitials = (name: string) => {
@@ -86,56 +73,7 @@ export default function GroupDetailsScreen() {
 
         <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 20 }}>
           {/* Main Info Card */}
-          <MotiView
-            from={{ opacity: 0, translateY: 12 }}
-            animate={{ opacity: 1, translateY: 0 }}
-            transition={{ type: 'timing', duration: 400 }}
-          >
-            <View className="rounded-3xl p-5 mb-6 bg-zinc-800 dark:bg-zinc-800">
-              <View className="flex-row items-center mb-6">
-                <View className="w-14 h-14 rounded-full bg-white/10 items-center justify-center mr-4">
-                  <Text className="text-2xl">{group.emoji}</Text>
-                </View>
-                <View className="flex-1">
-                  <Text className="text-xl font-bold text-white mb-1">{group.name}</Text>
-                  <Text className="text-sm text-slate-400">
-                    {progress.totalMembers} members · {dateStr}
-                  </Text>
-                </View>
-              </View>
-
-              {/* Progress bar */}
-              <View className="h-2 rounded-full bg-white/10 mb-4 overflow-hidden">
-                <View className="h-full rounded-full bg-indigo-400" style={{ width: `${percentComplete}%` }} />
-              </View>
-
-              {/* Stats */}
-              <View className="flex-row justify-between mb-5">
-                <View className="flex-1 p-3 rounded-xl bg-white/5 mx-1">
-                  <Text className="text-lg font-bold text-white mb-0.5">€{progress.collectedAmount}</Text>
-                  <Text className="text-xs text-slate-400">Collected</Text>
-                </View>
-                <View className="flex-1 p-3 rounded-xl bg-white/5 mx-1">
-                  <Text className="text-lg font-bold text-white mb-0.5">€{group.totalAmount}</Text>
-                  <Text className="text-xs text-slate-400">Target</Text>
-                </View>
-                <View className="flex-1 p-3 rounded-xl bg-white/5 mx-1">
-                  <Text className="text-lg font-bold text-red-500 mb-0.5">€{progress.remainingAmount}</Text>
-                  <Text className="text-xs text-slate-400">Remaining</Text>
-                </View>
-              </View>
-
-              {/* Completion */}
-              <View className="flex-row justify-between items-end">
-                <Text className="text-sm text-slate-400 leading-5">
-                  {progress.paidMembers} / {progress.totalMembers}{'\n'}paid
-                </Text>
-                <View className="bg-indigo-500/10 px-3 py-1.5 rounded-full">
-                  <Text className="text-sm font-semibold text-indigo-400">{percentComplete}% complete</Text>
-                </View>
-              </View>
-            </View>
-          </MotiView>
+          <GroupCard group={group} variant="detailed" />
 
           {/* Actions */}
           <View className="flex-row mb-8 gap-x-3">
@@ -172,9 +110,6 @@ export default function GroupDetailsScreen() {
           {/* Payment History */}
           <View className="flex-row justify-between items-center mb-4 mt-6">
             <Text className="text-[10px] uppercase tracking-widest font-bold text-zinc-500 dark:text-zinc-400">PAYMENT HISTORY</Text>
-            <AnimatedPressable>
-              <Text className="text-sm font-medium text-indigo-500 dark:text-indigo-400">Export</Text>
-            </AnimatedPressable>
           </View>
 
           <View className="rounded-2xl overflow-hidden">
