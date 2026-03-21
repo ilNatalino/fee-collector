@@ -14,7 +14,7 @@ export function StatCard({ label, value, valueColor, delay = 0 }: StatCardProps)
       from={{ opacity: 0, translateY: 12 }}
       animate={{ opacity: 1, translateY: 0 }}
       transition={{ type: 'timing', duration: 500, delay }}
-      className="w-[48.5%] rounded-4xl shadow-sm shadow-zinc-950/5 ring-1 ring-zinc-950/5 dark:ring-white/10 bg-white dark:bg-zinc-900 py-4 px-3.5"
+      className="w-[48.5%] rounded-4xl shadow-sm shadow-zinc-950/5 dark:ring-white/10 bg-white dark:bg-zinc-900 py-4 px-3.5"
     >
       <Text className="text-xs uppercase tracking-widest text-zinc-500 dark:text-zinc-400 mb-2">
         {label}

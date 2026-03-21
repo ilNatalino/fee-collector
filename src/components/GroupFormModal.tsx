@@ -100,7 +100,7 @@ export function GroupFormModal({ visible, onCancel, onSubmit }: GroupFormModalPr
           animate={{ opacity: 1, scale: 1 }}
           transition={{ type: 'timing', duration: 200 }}
         >
-          <View className="shadow-lg shadow-zinc-950/10 ring-1 ring-zinc-950/5 dark:ring-white/10 rounded-2xl p-4 gap-y-2.5 bg-white dark:bg-zinc-900 max-h-[85%]">
+          <View className="shadow-lg shadow-zinc-950/10 dark:ring-white/10 rounded-2xl p-4 gap-y-2.5 bg-white dark:bg-zinc-900 max-h-[85%]">
             <Text className="text-lg font-bold text-zinc-900 dark:text-zinc-100 mb-1">New Group</Text>
 
             <TextInput

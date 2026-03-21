@@ -6,6 +6,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { AnimatedPressable } from '@/src/components/AnimatedPressable';
 import { GroupCard } from '@/src/components/GroupCard';
+import { GroupMembersList } from '@/src/components/GroupMembersList';
 import { UserActivityItem } from '@/src/components/UserActivityItem';
 import { useGroups } from '@/src/hooks/useGroups';
 import { UserActivity } from '@/src/types/userActivity';
@@ -38,18 +39,6 @@ export default function GroupDetailsScreen() {
     );
   }
 
-  const getInitials = (name: string) => {
-    return name.split(' ').map((n) => n[0]).join('').substring(0, 2).toUpperCase();
-  };
-
-  const getFirstName = (name: string) => {
-    const parts = name.split(' ');
-    if (parts.length > 1) {
-      return `${parts[0]} ${parts[1][0]}.`;
-    }
-    return parts[0];
-  };
-
   const iconColor = isDark ? '#f4f4f5' : '#18181b';
 
   return (
@@ -59,14 +48,14 @@ export default function GroupDetailsScreen() {
         <View className="flex-row items-center justify-between px-5 pt-3 pb-4">
           <AnimatedPressable
             onPress={() => router.back()}
-            className="w-10 h-10 rounded-xl items-center justify-center shadow-sm shadow-zinc-950/5 ring-1 ring-zinc-950/5 dark:ring-white/10 bg-white dark:bg-zinc-900"
+            className="w-10 h-10 rounded-xl items-center justify-center shadow-sm shadow-zinc-950/5 dark:ring-white/10 bg-white dark:bg-zinc-900"
           >
             <ChevronLeft size={24} color={iconColor} />
           </AnimatedPressable>
           <Text className="text-lg font-semibold flex-1 text-center text-zinc-900 dark:text-zinc-100" numberOfLines={1}>
             {group.name}
           </Text>
-          <AnimatedPressable className="w-10 h-10 rounded-xl items-center justify-center shadow-sm shadow-zinc-950/5 ring-1 ring-zinc-950/5 dark:ring-white/10 bg-white dark:bg-zinc-900">
+          <AnimatedPressable className="w-10 h-10 rounded-xl items-center justify-center shadow-sm shadow-zinc-950/5 dark:ring-white/10 bg-white dark:bg-zinc-900">
             <EllipsisVertical size={20} color={iconColor} />
           </AnimatedPressable>
         </View>
@@ -94,18 +83,7 @@ export default function GroupDetailsScreen() {
             </AnimatedPressable>
           </View>
 
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingRight: 20 }}>
-            {group.members.map((member) => (
-              <View key={member.id} className="items-center mr-5 w-[60px]">
-                <View className="w-14 h-14 rounded-full border-2 border-zinc-900 dark:border-zinc-100 items-center justify-center mb-2">
-                  <Text className="text-lg font-semibold text-zinc-900 dark:text-zinc-100">
-                    {getInitials(member.name)}
-                  </Text>
-                </View>
-                <Text className="text-xs text-center text-zinc-500 dark:text-zinc-400">{getFirstName(member.name)}</Text>
-              </View>
-            ))}
-          </ScrollView>
+          <GroupMembersList members={group.members} />
 
           {/* Payment History */}
           <View className="flex-row justify-between items-center mb-4 mt-6">

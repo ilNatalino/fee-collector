@@ -35,12 +35,12 @@ export function GroupCard({ group, delay = 0, variant = 'compact', ...props }: G
       <AnimatedPressable
         onPress={props.onPress || (!isDetailed ? () => router.push(`/group/${group.id}`) : undefined)}
         disabled={isDetailed && !props.onPress}
-        className={`rounded-4xl bg-white dark:bg-zinc-900 shadow-md shadow-zinc-950/5 ring-1 ring-zinc-950/5 ${isDetailed ? 'p-6 mb-6' : 'p-5 mb-3'}`}
+        className={`rounded-4xl bg-white dark:bg-zinc-900 shadow-md shadow-zinc-950/5 ${isDetailed ? 'p-6 mb-6' : 'p-5 mb-3'}`}
       >
         {/* Header */}
         <View className={`flex-row justify-between items-center ${isDetailed ? 'mb-6' : 'mb-4'}`}>
           <View className="flex-row items-center gap-x-3">
-            <View className={`${isDetailed ? 'w-14 h-14' : 'w-10 h-10'} rounded-full bg-zinc-100 dark:bg-zinc-800 items-center justify-center`}>
+            <View className={`${isDetailed ? 'w-14 h-14' : 'w-10 h-10'} rounded-full bg-zinc-100 dark:bg-zinc-900 items-center justify-center`}>
               <Text className={isDetailed ? 'text-2xl' : 'text-xl'}>{group.emoji}</Text>
             </View>
             <View>
@@ -53,7 +53,7 @@ export function GroupCard({ group, delay = 0, variant = 'compact', ...props }: G
             </View>
           </View>
           {!isDetailed && (
-            <View className="rounded-xl bg-indigo-500/10 dark:bg-indigo-400/10 px-3 py-1">
+            <View className="rounded-xl bg-indigo-500/10 dark:bg-zinc-900 px-3 py-1">
               <Text className="text-sm font-bold text-indigo-500 dark:text-indigo-400">
                 {percentComplete}%
               </Text>
@@ -73,24 +73,24 @@ export function GroupCard({ group, delay = 0, variant = 'compact', ...props }: G
         {isDetailed ? (
           <>
             <View className="flex-row justify-between mb-5">
-              <View className="flex-1 p-3 rounded-2xl bg-zinc-50 dark:bg-zinc-800 mx-1">
-                <Text className="text-lg font-bold text-zinc-900 dark:text-zinc-100 mb-0.5">€{progress.collectedAmount}</Text>
+              <View className="flex-1 p-3 rounded-2xl bg-zinc-50 dark:bg-zinc-900 mx-1">
                 <Text className="text-xs text-zinc-500 dark:text-zinc-400">Collected</Text>
+                <Text className="text-lg font-bold text-zinc-900 dark:text-zinc-100 mb-0.5">€{progress.collectedAmount}</Text>
               </View>
-              <View className="flex-1 p-3 rounded-2xl bg-zinc-50 dark:bg-zinc-800 mx-1">
-                <Text className="text-lg font-bold text-zinc-900 dark:text-zinc-100 mb-0.5">€{group.totalAmount}</Text>
+              <View className="flex-1 p-3 rounded-2xl bg-zinc-50 dark:bg-zinc-900 mx-1">
                 <Text className="text-xs text-zinc-500 dark:text-zinc-400">Target</Text>
+                <Text className="text-lg font-bold text-zinc-900 dark:text-zinc-100 mb-0.5">€{group.totalAmount}</Text>
               </View>
-              <View className="flex-1 p-3 rounded-2xl bg-zinc-50 dark:bg-zinc-800 mx-1">
-                <Text className="text-lg font-bold text-red-500 dark:text-red-400 mb-0.5">€{progress.remainingAmount}</Text>
+              <View className="flex-1 p-3 rounded-2xl bg-zinc-50 dark:bg-zinc-900 mx-1">
                 <Text className="text-xs text-zinc-500 dark:text-zinc-400">Remaining</Text>
+                <Text className="text-lg font-bold text-red-500 dark:text-red-400 mb-0.5">€{progress.remainingAmount}</Text>
               </View>
             </View>
             <View className="flex-row justify-between items-end">
               <Text className="text-sm text-zinc-500 dark:text-zinc-400 leading-5">
                 {progress.paidMembers} / {progress.totalMembers}{'\n'}paid
               </Text>
-              <View className="bg-indigo-500/10 dark:bg-indigo-400/10 px-3 py-1.5 rounded-full">
+              <View className="bg-indigo-500/10 dark:bg-zinc-900 px-3 py-1.5 rounded-full">
                 <Text className="text-sm font-semibold text-indigo-500 dark:text-indigo-400">{percentComplete}% complete</Text>
               </View>
             </View>

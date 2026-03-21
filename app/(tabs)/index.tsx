@@ -6,8 +6,6 @@ import { AnimatedPressable } from '@/src/components/AnimatedPressable';
 import { GroupCard } from '@/src/components/GroupCard';
 import { GroupFormModal } from '@/src/components/GroupFormModal';
 import { Screen } from '@/src/components/Screen';
-import { SwipeableList } from '@/src/components/SwipeableList';
-import { UserActivityItem } from '@/src/components/UserActivityItem';
 import { useGroups } from '@/src/hooks/useGroups';
 import { useUserActivities } from '@/src/hooks/useUserActivities';
 import { getGroupsSummary } from '@/src/utils/groupMetrics';
@@ -60,9 +58,9 @@ export default function HomeScreen() {
         </View> */}
 
         {/* Active groups */}
-        <View className="flex-row justify-between items-center mb-3">
+        <View className="flex-row justify-between items-center mb-3 mt-12">
           <Text className="text-[10px] uppercase tracking-widest font-bold text-zinc-500 dark:text-zinc-400">
-            ACTIVE GROUPS
+          
           </Text>
           <AnimatedPressable onPress={() => {}} accessibilityLabel="See all groups">
             <Text className="text-[13px] font-semibold text-indigo-500 dark:text-indigo-400">See all</Text>
@@ -80,7 +78,7 @@ export default function HomeScreen() {
         )}
 
         {/* Recent activity */}
-        <View className="flex-row justify-between items-center mb-3 mt-2">
+        {/* <View className="flex-row justify-between items-center mb-3 mt-2">
           <Text className="text-[10px] uppercase tracking-widest font-bold text-zinc-500 dark:text-zinc-400">
             RECENT ACTIVITY
           </Text>
@@ -102,7 +100,7 @@ export default function HomeScreen() {
           scrollEnabled={false}
           editFeature={false}
           deleteFeature={false}
-        />
+        /> */}
 
         <View className="h-20" />
       </ScrollView>

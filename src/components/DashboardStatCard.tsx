@@ -15,7 +15,7 @@ export function DashboardStatCard({ label, value, subLabel, delay = 0 }: Dashboa
       from={{ opacity: 0, translateY: 12 }}
       animate={{ opacity: 1, translateY: 0 }}
       transition={{ type: 'timing', duration: 500, delay }}
-      className="flex-1 rounded-3xl shadow-sm shadow-zinc-950/5 ring-1 ring-zinc-950/5 dark:ring-white/10 bg-white dark:bg-zinc-900 py-4 px-3.5"
+      className="flex-1 rounded-3xl shadow-sm shadow-zinc-950/5 dark:ring-white/10 bg-white dark:bg-zinc-900 py-4 px-3.5"
     >
       {/* center text */}
       <Text className="text-[10px] uppercase tracking-widest text-zinc-500 dark:text-zinc-400 mb-1.5">

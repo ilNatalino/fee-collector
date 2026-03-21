@@ -3,6 +3,7 @@ import { MotiView } from 'moti';
 import { Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { useColorScheme } from 'nativewind/dist/stylesheet';
 import { AnimatedPressable } from './AnimatedPressable';
 
 function getGreeting(): string {
@@ -14,6 +15,8 @@ function getGreeting(): string {
 
 export function Header() {
   const insets = useSafeAreaInsets();
+  const { colorScheme } = useColorScheme();
+  const isDark = colorScheme === 'dark';
 
   return (
     <MotiView
@@ -29,10 +32,10 @@ export function Header() {
         </Text>
         <View className="flex-row items-center gap-x-3">
           <AnimatedPressable
-            className="w-10 h-10 rounded-full items-center justify-center shadow-sm shadow-zinc-950/5 ring-1 ring-zinc-950/5 dark:ring-white/10 bg-white dark:bg-zinc-900"
+            className="w-10 h-10 rounded-full items-center justify-center shadow-sm shadow-zinc-950/5 dark:ring-white/10 bg-white dark:bg-zinc-900"
             accessibilityLabel="Notifications"
           >
-            <Bell size={18} className="text-zinc-600 dark:text-zinc-400" />
+            <Bell size={18} color={isDark ? 'white' : 'black'} className="text-zinc-600 dark:text-zinc-400" />
           </AnimatedPressable>
           <View className="w-10 h-10 rounded-full items-center justify-center bg-indigo-500">
             <Text className="text-white text-sm font-bold">FM</Text>
