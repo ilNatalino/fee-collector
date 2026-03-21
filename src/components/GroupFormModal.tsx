@@ -1,8 +1,11 @@
-import { CirclePlus, XCircle } from 'lucide-react-native';
+import { MOCK_USERS } from '@/src/data/mockUsers';
+import { Picker } from '@react-native-picker/picker';
+import { Home, Plane, UserPlus, Utensils, XCircle, Zap } from 'lucide-react-native';
 import { MotiView } from 'moti';
 import { useColorScheme } from 'nativewind';
 import { useEffect, useState } from 'react';
-import { Modal, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
+import { KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 type MemberInput = {
   key: string;
@@ -16,10 +19,18 @@ type GroupFormModalProps = Readonly<{
   onSubmit: (payload: {
     name: string;
     emoji: string;
+    category: any;
     totalAmount: number;
     members: { name: string; amountDue: number }[];
   }) => void;
 }>;
+
+const CATEGORIES = [
+  { id: 'food', icon: Utensils, emoji: '🍽️' },
+  { id: 'travel', icon: Plane, emoji: '✈️' },
+  { id: 'home', icon: Home, emoji: '🏠' },
+  { id: 'energy', icon: Zap, emoji: '⚡' },
+];
 
 const EMOJI_OPTIONS = ['🎁', '🍽️', '🎂', '✈️', '🎉', '🏠', '💰', '🎓'];
 
@@ -28,25 +39,38 @@ const createMemberKey = () => `m-${Date.now()}-${Math.random().toString(36).slic
 export function GroupFormModal({ visible, onCancel, onSubmit }: GroupFormModalProps) {
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === 'dark';
+  
   const [groupName, setGroupName] = useState('');
-  const [selectedEmoji, setSelectedEmoji] = useState(EMOJI_OPTIONS[0]);
+  const [selectedEmoji, setSelectedEmoji] = useState(CATEGORIES[0].emoji);
   const [totalAmount, setTotalAmount] = useState('');
   const [members, setMembers] = useState<MemberInput[]>([
     { key: createMemberKey(), name: '', amount: '' },
   ]);
   const [error, setError] = useState<string | null>(null);
+  const [showCreateUserModal, setShowCreateUserModal] = useState(false);
+  const [showAddMemberModal, setShowAddMemberModal] = useState(false);
+  const [availableUsers, setAvailableUsers] = useState(MOCK_USERS.map(u => u.name));
+  const [selectedUserToAdd, setSelectedUserToAdd] = useState('');
+  const [newUserName, setNewUserName] = useState('');
+  const [newUserSurname, setNewUserSurname] = useState('');
 
   useEffect(() => {
     if (!visible) return;
     setGroupName('');
-    setSelectedEmoji(EMOJI_OPTIONS[0]);
+    setSelectedEmoji(CATEGORIES[0].emoji);
     setTotalAmount('');
     setMembers([{ key: createMemberKey(), name: '', amount: '' }]);
     setError(null);
+    setShowCreateUserModal(false);
+    setShowAddMemberModal(false);
+    setAvailableUsers(MOCK_USERS.map(u => u.name));
+    setSelectedUserToAdd('');
+    setNewUserName('');
+    setNewUserSurname('');
   }, [visible]);
 
-  const addMember = () => {
-    setMembers((prev) => [...prev, { key: createMemberKey(), name: '', amount: '' }]);
+  const addMember = (name = '') => {
+    setMembers((prev) => [...prev, { key: createMemberKey(), name, amount: '' }]);
   };
 
   const removeMember = (key: string) => {
@@ -82,118 +106,293 @@ export function GroupFormModal({ visible, onCancel, onSubmit }: GroupFormModalPr
       return;
     }
 
+    const catId = CATEGORIES.find(c => c.emoji === selectedEmoji)?.id || 'food';
     onSubmit({
       name: groupName.trim(),
       emoji: selectedEmoji,
+      category: catId,
       totalAmount: parsedTotal,
       members: validMembers,
     });
   };
 
-  const primaryColor = isDark ? '#818cf8' : '#6366f1';
-
   return (
-    <Modal visible={visible} transparent animationType="fade" onRequestClose={onCancel}>
-      <View className="flex-1 justify-center px-[18px] bg-black/30">
-        <MotiView
-          from={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ type: 'timing', duration: 200 }}
+    <Modal visible={visible} animationType="slide" transparent={false} onRequestClose={onCancel}>
+      <SafeAreaView className="flex-1 bg-black dark:bg-zinc-950">
+        <KeyboardAvoidingView 
+          style={{ flex: 1 }} 
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         >
-          <View className="shadow-lg shadow-zinc-950/10 dark:ring-white/10 rounded-2xl p-4 gap-y-2.5 bg-white dark:bg-zinc-900 max-h-[85%]">
-            <Text className="text-lg font-bold text-zinc-900 dark:text-zinc-100 mb-1">New Group</Text>
-
-            <TextInput
-              value={groupName}
-              onChangeText={(v) => { setGroupName(v); setError(null); }}
-              placeholder="Group name (e.g. Birthday party)"
-              placeholderTextColor="#a1a1aa"
-              className="border border-zinc-200 dark:border-zinc-800 rounded-xl px-3 py-2.5 text-sm text-zinc-900 dark:text-zinc-100"
-            />
-
-            <Text className="text-[13px] font-medium text-zinc-500 dark:text-zinc-400">Choose an icon</Text>
-            <View className="flex-row gap-2 flex-wrap">
-              {EMOJI_OPTIONS.map((emoji) => (
-                <Pressable
-                  key={emoji}
-                  onPress={() => setSelectedEmoji(emoji)}
-                  className={`w-[38px] h-[38px] rounded-[10px] border-[1.5px] items-center justify-center ${
-                    emoji === selectedEmoji
-                      ? 'border-indigo-500 dark:border-indigo-400 bg-indigo-500/10 dark:bg-indigo-400/10'
-                      : 'border-zinc-200 dark:border-zinc-800'
-                  }`}
-                >
-                  <Text className="text-lg">{emoji}</Text>
-                </Pressable>
-              ))}
-            </View>
-
-            <TextInput
-              value={totalAmount}
-              onChangeText={(v) => { setTotalAmount(v); setError(null); }}
-              placeholder="Total amount (€)"
-              placeholderTextColor="#a1a1aa"
-              keyboardType="decimal-pad"
-              className="border border-zinc-200 dark:border-zinc-800 rounded-xl px-3 py-2.5 text-sm text-zinc-900 dark:text-zinc-100"
-            />
-
-            <View className="flex-row justify-between items-center">
-              <Text className="text-[13px] font-medium text-zinc-500 dark:text-zinc-400">Members</Text>
-              <Pressable onPress={addMember} accessibilityLabel="Add member">
-                <CirclePlus size={22} color={primaryColor} />
+          <MotiView
+            from={{ opacity: 0, translateY: 20 }}
+            animate={{ opacity: 1, translateY: 0 }}
+            transition={{ type: 'timing', duration: 300 }}
+            className="flex-1"
+          >
+            {/* Header */}
+            <View className="flex-row justify-between items-center px-6 py-4">
+              <Pressable onPress={onCancel} className="p-2 -ml-2">
+                <Text className="text-[17px] font-semibold text-slate-500 dark:text-zinc-400">Cancel</Text>
+              </Pressable>
+              <Text className="text-[19px] font-bold text-slate-700 dark:text-zinc-100">New Group</Text>
+              <Pressable onPress={handleSubmit} className="p-2 -mr-2">
+                <Text className="text-[17px] font-bold text-slate-600 dark:text-zinc-300">Create</Text>
               </Pressable>
             </View>
 
-            <ScrollView style={{ maxHeight: 160 }} nestedScrollEnabled>
-              {members.map((member) => (
-                <View key={member.key} className="flex-row gap-x-2 items-center mb-2">
+            <ScrollView className="flex-1 px-8" showsVerticalScrollIndicator={false}>
+              
+              {/* Photo & Group Name */}
+              <View className="items-center mt-6">
+                
+                <TextInput
+                  value={groupName}
+                  onChangeText={(v) => { setGroupName(v); setError(null); }}
+                  placeholder="Group Name"
+                  placeholderTextColor="#cbd5e1"
+                  className="mt-6 text-3xl font-bold text-slate-400 dark:text-zinc-300 text-center w-full min-w-[200px]"
+                />
+                <View className="h-[2px] w-16 bg-slate-200 dark:bg-zinc-800 mt-2" />
+              </View>
+
+              {/* Total Amount */}
+              <View className="items-center mt-12">
+                <Text className="text-[11px] font-bold tracking-widest text-slate-500 dark:text-zinc-400 mb-6 uppercase">
+                  Total Amount
+                </Text>
+                <View className="flex-row items-center justify-center">
                   <TextInput
-                    value={member.name}
-                    onChangeText={(v) => updateMember(member.key, 'name', v)}
-                    placeholder="Name"
-                    placeholderTextColor="#a1a1aa"
-                    className="flex-1 border border-zinc-200 dark:border-zinc-800 rounded-[10px] px-2.5 py-2 text-[13px] text-zinc-900 dark:text-zinc-100"
-                  />
-                  <TextInput
-                    value={member.amount}
-                    onChangeText={(v) => updateMember(member.key, 'amount', v)}
-                    placeholder="€"
-                    placeholderTextColor="#a1a1aa"
+                    value={totalAmount}
+                    onChangeText={(v) => { setTotalAmount(v); setError(null); }}
+                    placeholder="0.00"
+                    placeholderTextColor="#e2e8f0"
                     keyboardType="decimal-pad"
-                    className="w-[70px] border border-zinc-200 dark:border-zinc-800 rounded-[10px] px-2.5 py-2 text-[13px] text-zinc-900 dark:text-zinc-100"
+                    className="text-[64px] font-bold text-slate-200 dark:text-zinc text-center min-w-[120px]"
+                    style={{ includeFontPadding: false, padding: 0 }}
                   />
-                  {members.length > 1 ? (
-                    <Pressable onPress={() => removeMember(member.key)} accessibilityLabel="Remove member">
-                      <XCircle size={20} color="#ef4444" />
-                    </Pressable>
-                  ) : null}
+                  <Text className="text-[40px] font-semibold text-slate-400 dark:text-zinc-500 ml-6">€</Text>
                 </View>
-              ))}
+                
+              </View>
+
+              {/* Category */}
+              <View className="items-center mt-12 w-full">
+                <Text className="text-[11px] font-bold tracking-widest text-slate-500 dark:text-zinc-400 mb-6 uppercase">
+                  Group Category
+                </Text>
+                <View className="flex-row justify-center gap-x-5 w-full">
+                  {CATEGORIES.map((cat) => {
+                    const isActive = cat.emoji === selectedEmoji;
+                    const Icon = cat.icon;
+                    return (
+                      <Pressable
+                        key={cat.id}
+                        onPress={() => setSelectedEmoji(cat.emoji)}
+                        className={`w-16 h-16 rounded-[20px] items-center justify-center ${
+                          isActive
+                            ? 'bg-blue-100 dark:bg-blue-900/40'
+                            : 'bg-slate-100/80 dark:bg-zinc-900'
+                        }`}
+                      >
+                        <Icon 
+                          size={24} 
+                          color={isActive ? (isDark ? '#93c5fd' : '#1e3a8a') : (isDark ? '#d4d4d8' : '#334155')} 
+                          strokeWidth={isActive ? 2.5 : 2} 
+                        />
+                      </Pressable>
+                    );
+                  })}
+                </View>
+              </View>
+
+              {/* Members */}
+              <View className="w-full mt-14 mb-8">
+                <View className="flex-row justify-between items-center z-50 mb-6">
+                  <Text className="text-[22px] font-bold text-slate-800 dark:text-zinc-100">Members</Text>
+                  <Pressable 
+                    onPress={() => {
+                      setShowAddMemberModal(true);
+                      setSelectedUserToAdd('');
+                    }}
+                    className="flex-row items-center bg-slate-100 dark:bg-zinc-900 px-4 py-2 rounded-xl"
+                  >
+                    <UserPlus size={16} color={isDark ? '#d4d4d8' : '#334155'} strokeWidth={2.5} style={{ marginRight: 8 }} />
+                    <Text className="text-[15px] font-medium text-slate-700 dark:text-zinc-300">Add Member</Text>
+                  </Pressable>
+                </View>
+                
+                <View className="mt-2">
+
+                {members.map((member, index) => {
+                  const initial = member.name ? member.name.charAt(0).toUpperCase() : '?';
+                  return (
+                    <View key={member.key} className="flex-row items-center justify-between mb-5">
+                      <View className="flex-row items-center flex-1">
+                        <View className="w-12 h-12 rounded-full bg-blue-50 dark:bg-zinc-800 items-center justify-center mr-4">
+                          <Text className="text-[17px] font-medium text-slate-700 dark:text-zinc-300">{initial}</Text>
+                        </View>
+                        <View className="flex-1 mr-4">
+                          <TextInput
+                            value={member.name}
+                            onChangeText={(v) => updateMember(member.key, 'name', v)}
+                            placeholder="Name"
+                            placeholderTextColor="#94a3b8"
+                            className="text-[17px] font-bold text-slate-800 dark:text-zinc-100 p-0"
+                          />
+                          <Text className="text-[13px] font-medium text-slate-500 dark:text-zinc-400 mt-0.5">
+                            {index === 0 ? 'Organizer' : 'Invited'}
+                          </Text>
+                        </View>
+                      </View>
+                      
+                      <View className="flex-row items-center justify-end w-24">
+                        <TextInput
+                          value={member.amount}
+                          onChangeText={(v) => updateMember(member.key, 'amount', v)}
+                          placeholder="0.00"
+                          placeholderTextColor="#cbd5e1"
+                          keyboardType="decimal-pad"
+                          className="text-[15px] font-medium text-slate-600 dark:text-zinc-400 text-right p-0 mr-1 flex-1"
+                        />
+                        <Text className="text-[13px] font-medium text-slate-400 mt-[2px] ml-1">€</Text>
+                      </View>
+                      {members.length > 1 && (
+                        <Pressable onPress={() => removeMember(member.key)} className="ml-3 pl-1">
+                          <XCircle size={18} color="#ef4444" strokeWidth={2} />
+                        </Pressable>
+                      )}
+                    </View>
+                  );
+                })}
+
+                {error ? (
+                  <Text className="text-sm font-medium text-red-500 dark:text-red-400 mt-4 text-center">{error}</Text>
+                ) : null}
+                
+                <View className="h-10" />
+              </View>
+              </View>
             </ScrollView>
+          </MotiView>
+        </KeyboardAvoidingView>
+      </SafeAreaView>
 
-            {error ? <Text className="text-xs text-red-500 dark:text-red-400">{error}</Text> : null}
+      {/* Add Member Modal */}
+      {showAddMemberModal && (
+        <View className="absolute inset-0 z-50 px-4" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
+          <KeyboardAvoidingView 
+            style={{ flex: 1 }} 
+            behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+          >
+            <View className="flex-1 justify-center items-center">
+              <View className="w-full max-w-sm bg-white dark:bg-zinc-800 rounded-3xl p-6 shadow-zinc-950/5 ring-1 ring-zinc-950/5">
+                <Text className="text-[19px] font-bold text-slate-800 dark:text-zinc-100 mb-6">Select Member</Text>
+                
+                <View className="flex-row items-center space-x-3 mb-6 gap-x-3">
+                  <View className="flex-1 bg-zinc-50 dark:bg-zinc-900/50 rounded-xl min-h-[48px] justify-center border border-zinc-200 dark:border-zinc-700/50">
+                    <Picker
+                      selectedValue={selectedUserToAdd}
+                      onValueChange={(v) => setSelectedUserToAdd(v)}
+                      style={{ minHeight: 48, width: '100%', color: isDark ? '#d4d4d8' : '#334155' }}
+                      dropdownIconColor={isDark ? '#d4d4d8' : '#334155'}
+                      mode="dropdown"
+                    >
+                      <Picker.Item label="Select a user..." value="" color={isDark ? '#71717a' : '#94a3b8'} />
+                      {availableUsers.map((name, idx) => (
+                        <Picker.Item key={idx} label={name} value={name} color={isDark ? '#f4f4f5' : '#09090b'} />
+                      ))}
+                    </Picker>
+                  </View>
+                  
+                  <Pressable 
+                    onPress={() => setShowCreateUserModal(true)}
+                    className="bg-zinc-50 dark:bg-zinc-900/50 border border-zinc-200 dark:border-zinc-700/50 h-[48px] px-4 rounded-xl items-center justify-center flex-row"
+                  >
+                    <UserPlus size={18} color={isDark ? '#d4d4d8' : '#334155'} strokeWidth={2.5} />
+                  </Pressable>
+                </View>
 
-            <View className="mt-1 flex-row justify-end gap-x-2.5">
-              <Pressable
-                onPress={onCancel}
-                className="border border-zinc-200 dark:border-zinc-800 rounded-xl py-2 px-3.5"
-                accessibilityRole="button"
-                accessibilityLabel="Cancel create group"
-              >
-                <Text className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">Cancel</Text>
-              </Pressable>
-              <Pressable
-                onPress={handleSubmit}
-                className="bg-indigo-500 dark:bg-indigo-400 rounded-xl py-2 px-3.5"
-                accessibilityRole="button"
-                accessibilityLabel="Create group"
-              >
-                <Text className="text-sm font-bold text-white">Create</Text>
-              </Pressable>
+                <View className="flex-row justify-end gap-x-3">
+                  <Pressable 
+                    onPress={() => setShowAddMemberModal(false)}
+                    className="px-5 py-2.5 rounded-xl items-center justify-center bg-zinc-100 dark:bg-zinc-800"
+                  >
+                    <Text className="text-[16px] font-semibold text-slate-600 dark:text-zinc-300">Cancel</Text>
+                  </Pressable>
+                  <Pressable 
+                    onPress={() => {
+                      if (selectedUserToAdd) {
+                        addMember(selectedUserToAdd);
+                        setShowAddMemberModal(false);
+                        setSelectedUserToAdd('');
+                      }
+                    }}
+                    className={`px-5 py-2.5 rounded-xl items-center justify-center shadow-sm ${selectedUserToAdd ? 'bg-slate-800 dark:bg-zinc-100' : 'bg-zinc-200 dark:bg-zinc-700'}`}
+                    disabled={!selectedUserToAdd}
+                  >
+                    <Text className={`text-[16px] font-bold ${selectedUserToAdd ? 'text-white dark:text-zinc-900' : 'text-slate-400 dark:text-zinc-500'}`}>Save</Text>
+                  </Pressable>
+                </View>
+              </View>
             </View>
-          </View>
-        </MotiView>
-      </View>
+          </KeyboardAvoidingView>
+        </View>
+      )}
+
+      {/* Create New User Modal */}
+      {showCreateUserModal && (
+        <View className="absolute inset-0 z-[60] px-4" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
+          <KeyboardAvoidingView 
+            style={{ flex: 1 }} 
+            behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+          >
+            <View className="flex-1 justify-center items-center">
+              <View className="w-full max-w-sm bg-white dark:bg-zinc-800 rounded-3xl p-6 shadow-zinc-950/5 ring-1 ring-zinc-950/5">
+                <Text className="text-[19px] font-bold text-slate-800 dark:text-zinc-100 mb-6">Create New User</Text>
+                
+                <TextInput
+                  value={newUserName}
+                  onChangeText={setNewUserName}
+                  placeholder="First Name"
+                  placeholderTextColor={isDark ? '#71717a' : '#94a3b8'}
+                  className="bg-zinc-50 dark:bg-zinc-900/50 px-4 py-3.5 rounded-xl text-[16px] text-slate-800 dark:text-zinc-100 mb-3 border border-zinc-200 dark:border-zinc-700/50"
+                />
+                <TextInput
+                  value={newUserSurname}
+                  onChangeText={setNewUserSurname}
+                  placeholder="Surname"
+                  placeholderTextColor={isDark ? '#71717a' : '#94a3b8'}
+                  className="bg-zinc-50 dark:bg-zinc-900/50 px-4 py-3.5 rounded-xl text-[16px] text-slate-800 dark:text-zinc-100 mb-8 border border-zinc-200 dark:border-zinc-700/50"
+                />
+                
+                <View className="flex-row justify-end gap-x-3">
+                  <Pressable 
+                    onPress={() => setShowCreateUserModal(false)}
+                    className="px-5 py-2.5 rounded-xl items-center justify-center bg-zinc-100 dark:bg-zinc-800"
+                  >
+                    <Text className="text-[16px] font-semibold text-slate-600 dark:text-zinc-300">Cancel</Text>
+                  </Pressable>
+                  <Pressable 
+                    onPress={() => {
+                      const fullName = `${newUserName.trim()} ${newUserSurname.trim()}`.trim();
+                      if (fullName) {
+                        setAvailableUsers(prev => [...prev, fullName]);
+                        setSelectedUserToAdd(fullName);
+                        setShowCreateUserModal(false);
+                        setNewUserName('');
+                        setNewUserSurname('');
+                      }
+                    }}
+                    className="px-5 py-2.5 rounded-xl items-center justify-center bg-slate-800 dark:bg-zinc-100 shadow-sm"
+                  >
+                    <Text className="text-[16px] font-bold text-white dark:text-zinc-900">Add User</Text>
+                  </Pressable>
+                </View>
+              </View>
+            </View>
+          </KeyboardAvoidingView>
+        </View>
+      )}
     </Modal>
   );
 }

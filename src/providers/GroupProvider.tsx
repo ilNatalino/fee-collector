@@ -25,6 +25,7 @@ export function GroupProvider({ children }: PropsWithChildren) {
     const newGroup: Group = {
       id: createId(),
       name: input.name,
+      category: input.category,
       emoji: input.emoji,
       createdDate: new Date().toISOString(),
       totalAmount: input.totalAmount,

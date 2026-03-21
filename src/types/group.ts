@@ -1,9 +1,12 @@
 import { UserQuota } from './quota';
 
+export type GroupCategory = 'food' | 'travel' | 'home' | 'utilities';
+
 export interface Group {
   id: string;
   name: string;
-  emoji: string;
+  category?: GroupCategory;
+  emoji?: string;
   createdDate: string;
   dueDate?: string;
   totalAmount: number;
@@ -30,7 +33,8 @@ export interface ActivityEntry {
 
 export type CreateGroupInput = {
   name: string;
-  emoji: string;
+  category: GroupCategory;
+  emoji?: string;
   totalAmount: number;
   members: { name: string; amountDue: number }[];
 };

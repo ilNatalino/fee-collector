@@ -1,11 +1,20 @@
 import { useRouter } from 'expo-router';
+import { Home, Plane, Utensils, Zap } from 'lucide-react-native';
 import { MotiView } from 'moti';
+import { useColorScheme } from 'nativewind';
 import { Text, View } from 'react-native';
 
-import { Group } from '@/src/types/group';
+import { Group, GroupCategory } from '@/src/types/group';
 import { getGroupProgress } from '@/src/utils/groupMetrics';
 
 import { AnimatedPressable } from './AnimatedPressable';
+
+const CATEGORY_ICONS: Record<GroupCategory, any> = {
+  food: Utensils,
+  travel: Plane,
+  home: Home,
+  utilities: Zap,
+};
 
 type GroupCardProps = {
   group: Group;
@@ -16,6 +25,9 @@ type GroupCardProps = {
 
 export function GroupCard({ group, delay = 0, variant = 'compact', ...props }: GroupCardProps) {
   const router = useRouter();
+  const { colorScheme } = useColorScheme();
+  const isDark = colorScheme === 'dark';
+
   const progress = getGroupProgress(group);
   const createdDate = new Date(group.createdDate);
   const dateStr = group.dueDate
@@ -25,6 +37,8 @@ export function GroupCard({ group, delay = 0, variant = 'compact', ...props }: G
   const percentComplete = group.totalAmount > 0 ? Math.round((progress.collectedAmount / group.totalAmount) * 100) : 0;
 
   const isDetailed = variant === 'detailed';
+  const IconComponent = group.category ? CATEGORY_ICONS[group.category] : null;
+  const iconColor = isDark ? '#818cf8' : '#6366f1';
 
   return (
     <MotiView
@@ -40,8 +54,12 @@ export function GroupCard({ group, delay = 0, variant = 'compact', ...props }: G
         {/* Header */}
         <View className={`flex-row justify-between items-center ${isDetailed ? 'mb-6' : 'mb-4'}`}>
           <View className="flex-row items-center gap-x-3">
-            <View className={`${isDetailed ? 'w-14 h-14' : 'w-10 h-10'} rounded-full bg-zinc-100 dark:bg-zinc-900 items-center justify-center`}>
-              <Text className={isDetailed ? 'text-2xl' : 'text-xl'}>{group.emoji}</Text>
+            <View className={`${isDetailed ? 'w-14 h-14' : 'w-10 h-10'} rounded-full bg-indigo-500/10 dark:bg-indigo-400/10 items-center justify-center`}>
+              {IconComponent ? (
+                <IconComponent size={isDetailed ? 26 : 20} color={iconColor} strokeWidth={isDetailed ? 2.5 : 2} />
+              ) : (
+                <Text className={isDetailed ? 'text-2xl' : 'text-xl'}>{group.emoji}</Text>
+              )}
             </View>
             <View>
               <Text className={`${isDetailed ? 'text-xl font-bold' : 'text-base font-semibold'} text-zinc-900 dark:text-zinc-100`}>
@@ -75,15 +93,15 @@ export function GroupCard({ group, delay = 0, variant = 'compact', ...props }: G
             <View className="flex-row justify-between mb-5">
               <View className="flex-1 p-3 rounded-2xl bg-zinc-50 dark:bg-zinc-900 mx-1">
                 <Text className="text-xs text-zinc-500 dark:text-zinc-400">Collected</Text>
-                <Text className="text-lg font-bold text-zinc-900 dark:text-zinc-100 mb-0.5">€{progress.collectedAmount}</Text>
+                <Text className="text-lg font-bold text-zinc-900 dark:text-zinc-100 mb-0.5">€{progress.collectedAmount.toFixed(2)}</Text>
               </View>
               <View className="flex-1 p-3 rounded-2xl bg-zinc-50 dark:bg-zinc-900 mx-1">
                 <Text className="text-xs text-zinc-500 dark:text-zinc-400">Target</Text>
-                <Text className="text-lg font-bold text-zinc-900 dark:text-zinc-100 mb-0.5">€{group.totalAmount}</Text>
+                <Text className="text-lg font-bold text-zinc-900 dark:text-zinc-100 mb-0.5">€{group.totalAmount.toFixed(2)}</Text>
               </View>
               <View className="flex-1 p-3 rounded-2xl bg-zinc-50 dark:bg-zinc-900 mx-1">
                 <Text className="text-xs text-zinc-500 dark:text-zinc-400">Remaining</Text>
-                <Text className="text-lg font-bold text-red-500 dark:text-red-400 mb-0.5">€{progress.remainingAmount}</Text>
+                <Text className="text-lg font-bold text-red-500 dark:text-red-400 mb-0.5">€{progress.remainingAmount.toFixed(2)}</Text>
               </View>
             </View>
             <View className="flex-row justify-between items-end">
@@ -100,9 +118,9 @@ export function GroupCard({ group, delay = 0, variant = 'compact', ...props }: G
             <View>
               <Text className="text-sm">
                 <Text className="font-bold text-indigo-500 dark:text-indigo-400">
-                  €{progress.collectedAmount}
+                  €{progress.collectedAmount.toFixed(2)}
                 </Text>
-                <Text className="text-zinc-500 dark:text-zinc-400"> / €{group.totalAmount}</Text>
+                <Text className="text-zinc-500 dark:text-zinc-400"> / €{group.totalAmount.toFixed(2)}</Text>
               </Text>
               <Text className="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">
                 {progress.paidMembers} / {progress.totalMembers} paid
@@ -113,7 +131,7 @@ export function GroupCard({ group, delay = 0, variant = 'compact', ...props }: G
                 Remaining
               </Text>
               <Text className="text-base font-bold text-red-500 dark:text-red-400">
-                €{progress.remainingAmount}
+                €{progress.remainingAmount.toFixed(2)}
               </Text>
             </View>
           </View>

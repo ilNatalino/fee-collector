@@ -4,6 +4,7 @@ export const mockGroups: Group[] = [
   {
     id: 'g1',
     name: 'Regalo di Nozze Luca',
+    category: 'home',
     emoji: '🎁',
     createdDate: '2026-03-12T10:00:00.000Z',
     dueDate: '2026-04-20T10:00:00.000Z',
@@ -34,6 +35,7 @@ export const mockGroups: Group[] = [
   {
     id: 'g2',
     name: 'Cena Classe',
+    category: 'food',
     emoji: '🍽️',
     createdDate: '2026-03-10T10:00:00.000Z',
     dueDate: '2026-03-30T10:00:00.000Z',
@@ -78,6 +80,7 @@ export const mockGroups: Group[] = [
   {
     id: 'g4',
     name: 'Viaggio Sardegna',
+    category: 'travel',
     emoji: '✈️',
     createdDate: '2026-03-01T10:00:00.000Z',
     totalAmount: 1200,
