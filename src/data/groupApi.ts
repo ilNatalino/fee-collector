@@ -15,3 +15,11 @@ export async function requestToggleMemberPaid(
 ): Promise<void> {
   return Promise.resolve();
 }
+
+export async function requestAddPayment(
+  _groupId: string,
+  _memberId: string,
+  _amount: number,
+): Promise<void> {
+  return Promise.resolve();
+}

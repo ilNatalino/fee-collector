@@ -1,6 +1,6 @@
 import { createContext, PropsWithChildren, useCallback, useContext, useMemo, useState } from 'react';
 
-import { requestCreateGroup, requestDeleteGroup, requestToggleMemberPaid } from '@/src/data/groupApi';
+import { requestAddPayment, requestCreateGroup, requestDeleteGroup, requestToggleMemberPaid } from '@/src/data/groupApi';
 import { mockActivities, mockGroups } from '@/src/data/mockGroups';
 import { ActivityEntry, CreateGroupInput, Group } from '@/src/types/group';
 
@@ -11,6 +11,7 @@ type GroupContextValue = {
   deleteGroup: (groupId: string) => Promise<void>;
   toggleMemberPaid: (groupId: string, memberId: string) => Promise<void>;
   addMemberToGroup: (groupId: string, name: string, amountDue: number) => void;
+  addPayment: (groupId: string, memberId: string, amount: number) => Promise<void>;
 };
 
 const GroupContext = createContext<GroupContextValue | undefined>(undefined);
@@ -98,6 +99,39 @@ export function GroupProvider({ children }: PropsWithChildren) {
     );
   }, []);
 
+  const addPayment = useCallback(async (groupId: string, memberId: string, amount: number) => {
+    setGroups((current) =>
+      current.map((g) => {
+        if (g.id !== groupId) return g;
+        return {
+          ...g,
+          members: g.members.map((m) => {
+            if (m.id !== memberId) return m;
+            
+            // Deduct the payment
+            const newAmountDue = Math.max(0, m.amountDue - amount);
+            const newPaid = newAmountDue <= 0;
+
+            void requestAddPayment(groupId, memberId, amount);
+
+            const activity: ActivityEntry = {
+              id: createId(),
+              groupId,
+              groupName: g.name,
+              memberName: m.name,
+              amount: amount,
+              date: new Date().toISOString(),
+              status: 'confirmed',
+            };
+            setActivities((prev) => [activity, ...prev]);
+
+            return { ...m, amountDue: newAmountDue, hasPaid: newPaid || m.hasPaid };
+          }),
+        };
+      }),
+    );
+  }, []);
+
   const value = useMemo(
     () => ({
       groups,
@@ -106,8 +140,9 @@ export function GroupProvider({ children }: PropsWithChildren) {
       deleteGroup,
       toggleMemberPaid,
       addMemberToGroup,
+      addPayment,
     }),
-    [groups, activities, addGroup, deleteGroup, toggleMemberPaid, addMemberToGroup],
+    [groups, activities, addGroup, deleteGroup, toggleMemberPaid, addMemberToGroup, addPayment],
   );
 
   return <GroupContext.Provider value={value}>{children}</GroupContext.Provider>;

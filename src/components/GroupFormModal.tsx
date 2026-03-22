@@ -43,9 +43,7 @@ export function GroupFormModal({ visible, onCancel, onSubmit }: GroupFormModalPr
   const [groupName, setGroupName] = useState('');
   const [selectedEmoji, setSelectedEmoji] = useState(CATEGORIES[0].emoji);
   const [totalAmount, setTotalAmount] = useState('');
-  const [members, setMembers] = useState<MemberInput[]>([
-    { key: createMemberKey(), name: '', amount: '' },
-  ]);
+  const [members, setMembers] = useState<MemberInput[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [showCreateUserModal, setShowCreateUserModal] = useState(false);
   const [showAddMemberModal, setShowAddMemberModal] = useState(false);
@@ -59,7 +57,7 @@ export function GroupFormModal({ visible, onCancel, onSubmit }: GroupFormModalPr
     setGroupName('');
     setSelectedEmoji(CATEGORIES[0].emoji);
     setTotalAmount('');
-    setMembers([{ key: createMemberKey(), name: '', amount: '' }]);
+    setMembers([]);
     setError(null);
     setShowCreateUserModal(false);
     setShowAddMemberModal(false);
@@ -223,47 +221,39 @@ export function GroupFormModal({ visible, onCancel, onSubmit }: GroupFormModalPr
                 
                 <View className="mt-2">
 
-                {members.map((member, index) => {
-                  const initial = member.name ? member.name.charAt(0).toUpperCase() : '?';
-                  return (
-                    <View key={member.key} className="flex-row items-center justify-between mb-5">
-                      <View className="flex-row items-center flex-1">
-                        <View className="w-12 h-12 rounded-full bg-blue-50 dark:bg-zinc-800 items-center justify-center mr-4">
-                          <Text className="text-[17px] font-medium text-slate-700 dark:text-zinc-300">{initial}</Text>
+                {members.length === 0 ? (
+                  <View className="py-6 items-center justify-center border-2 border-dashed border-zinc-200 dark:border-zinc-800 rounded-2xl mb-4">
+                    <Text className="text-[15px] font-medium text-zinc-500 dark:text-zinc-400 text-center px-4">
+                      No members added yet. Tap "Add Member" to include people in this group.
+                    </Text>
+                  </View>
+                ) : (
+                  members.map((member, index) => {
+                    const initial = member.name ? member.name.charAt(0).toUpperCase() : '?';
+                    return (
+                      <View key={member.key} className="flex-row items-center justify-between mb-5">
+                        <View className="flex-row items-center flex-1">
+                          <View className="w-12 h-12 rounded-full bg-blue-50 dark:bg-zinc-800 items-center justify-center mr-4">
+                            <Text className="text-[17px] font-medium text-slate-700 dark:text-zinc-300">{initial}</Text>
+                          </View>
+                          <View className="flex-1 mr-4">
+                            <TextInput
+                              value={member.name}
+                              onChangeText={(v) => updateMember(member.key, 'name', v)}
+                              placeholder="Name"
+                              placeholderTextColor="#94a3b8"
+                              className="text-[17px] font-bold text-slate-800 dark:text-zinc-100 p-0"
+                            />
+                          </View>
                         </View>
-                        <View className="flex-1 mr-4">
-                          <TextInput
-                            value={member.name}
-                            onChangeText={(v) => updateMember(member.key, 'name', v)}
-                            placeholder="Name"
-                            placeholderTextColor="#94a3b8"
-                            className="text-[17px] font-bold text-slate-800 dark:text-zinc-100 p-0"
-                          />
-                          <Text className="text-[13px] font-medium text-slate-500 dark:text-zinc-400 mt-0.5">
-                            {index === 0 ? 'Organizer' : 'Invited'}
-                          </Text>
-                        </View>
-                      </View>
-                      
-                      <View className="flex-row items-center justify-end w-24">
-                        <TextInput
-                          value={member.amount}
-                          onChangeText={(v) => updateMember(member.key, 'amount', v)}
-                          placeholder="0.00"
-                          placeholderTextColor="#cbd5e1"
-                          keyboardType="decimal-pad"
-                          className="text-[15px] font-medium text-slate-600 dark:text-zinc-400 text-right p-0 mr-1 flex-1"
-                        />
-                        <Text className="text-[13px] font-medium text-slate-400 mt-[2px] ml-1">€</Text>
-                      </View>
-                      {members.length > 1 && (
+                        
                         <Pressable onPress={() => removeMember(member.key)} className="ml-3 pl-1">
                           <XCircle size={18} color="#ef4444" strokeWidth={2} />
                         </Pressable>
-                      )}
-                    </View>
-                  );
-                })}
+                      </View>
+                    );
+                  })
+                )}
 
                 {error ? (
                   <Text className="text-sm font-medium text-red-500 dark:text-red-400 mt-4 text-center">{error}</Text>

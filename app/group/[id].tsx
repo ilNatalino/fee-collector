@@ -1,9 +1,11 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { ChevronLeft, EllipsisVertical, Plus } from 'lucide-react-native';
 import { useColorScheme } from 'nativewind';
+import { useState } from 'react';
 import { Pressable, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { AddPaymentModal } from '@/src/components/AddPaymentModal';
 import { AnimatedPressable } from '@/src/components/AnimatedPressable';
 import { GroupCard } from '@/src/components/GroupCard';
 import { GroupMembersList } from '@/src/components/GroupMembersList';
@@ -16,7 +18,9 @@ export default function GroupDetailsScreen() {
   const router = useRouter();
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === 'dark';
-  const { groups, activities } = useGroups();
+  const { groups, activities, addPayment } = useGroups();
+  
+  const [isPaymentModalVisible, setIsPaymentModalVisible] = useState(false);
 
   const group = groups.find((g) => g.id === id);
   const groupActivities = activities.filter((a) => a.groupId === id);
@@ -69,7 +73,10 @@ export default function GroupDetailsScreen() {
             <AnimatedPressable className="flex-1 h-[50px] rounded-2xl flex-row items-center justify-center">
               <Text className="text-[15px] font-semibold text-zinc-500 dark:text-zinc-400">Send reminder</Text>
             </AnimatedPressable>
-            <AnimatedPressable className="flex-1 h-[50px] rounded-2xl flex-row items-center justify-center">
+            <AnimatedPressable 
+              className="flex-1 h-[50px] rounded-2xl flex-row items-center justify-center bg-white dark:bg-zinc-900 shadow-sm shadow-zinc-950/5 dark:ring-white/10"
+              onPress={() => setIsPaymentModalVisible(true)}
+            >
               <Plus size={16} color={iconColor} style={{ marginRight: 6 }} />
               <Text className="text-[15px] font-semibold text-zinc-900 dark:text-zinc-100">Add payment</Text>
             </AnimatedPressable>
@@ -102,6 +109,16 @@ export default function GroupDetailsScreen() {
           <View className="h-10" />
         </ScrollView>
       </SafeAreaView>
+
+      <AddPaymentModal
+        visible={isPaymentModalVisible}
+        members={group.members}
+        onCancel={() => setIsPaymentModalVisible(false)}
+        onSubmit={(memberId, amount) => {
+          void addPayment(group.id, memberId, amount);
+          setIsPaymentModalVisible(false);
+        }}
+      />
     </View>
   );
 }
