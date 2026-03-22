@@ -2,6 +2,7 @@ export interface UserQuota {
   id: string;
   name: string;
   amountDue: number;
+  amountPaid?: number;
   hasPaid: boolean;
   insertedDate: string;
 }

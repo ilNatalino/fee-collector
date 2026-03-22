@@ -9,9 +9,7 @@ import { AddPaymentModal } from '@/src/components/AddPaymentModal';
 import { AnimatedPressable } from '@/src/components/AnimatedPressable';
 import { GroupCard } from '@/src/components/GroupCard';
 import { GroupMembersList } from '@/src/components/GroupMembersList';
-import { UserActivityItem } from '@/src/components/UserActivityItem';
 import { useGroups } from '@/src/hooks/useGroups';
-import { UserActivity } from '@/src/types/userActivity';
 
 export default function GroupDetailsScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -70,7 +68,8 @@ export default function GroupDetailsScreen() {
 
           {/* Actions */}
           <View className="flex-row mb-8 gap-x-3">
-            <AnimatedPressable className="flex-1 h-[50px] rounded-2xl flex-row items-center justify-center">
+            <AnimatedPressable 
+              className="flex-1 h-[50px] rounded-2xl flex-row items-center justify-center">
               <Text className="text-[15px] font-semibold text-zinc-500 dark:text-zinc-400">Send reminder</Text>
             </AnimatedPressable>
             <AnimatedPressable 
@@ -93,7 +92,7 @@ export default function GroupDetailsScreen() {
           <GroupMembersList members={group.members} />
 
           {/* Payment History */}
-          <View className="flex-row justify-between items-center mb-4 mt-6">
+          {/* <View className="flex-row justify-between items-center mb-4 mt-6">
             <Text className="text-[10px] uppercase tracking-widest font-bold text-zinc-500 dark:text-zinc-400">PAYMENT HISTORY</Text>
           </View>
 
@@ -104,7 +103,7 @@ export default function GroupDetailsScreen() {
             {groupActivities.length === 0 && (
               <Text className="text-sm text-center mt-3 p-4 text-zinc-500 dark:text-zinc-400">No recent activity</Text>
             )}
-          </View>
+          </View> */}
 
           <View className="h-10" />
         </ScrollView>

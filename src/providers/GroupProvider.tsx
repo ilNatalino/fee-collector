@@ -19,7 +19,15 @@ const GroupContext = createContext<GroupContextValue | undefined>(undefined);
 const createId = () => `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 
 export function GroupProvider({ children }: PropsWithChildren) {
-  const [groups, setGroups] = useState<Group[]>(() => mockGroups);
+  const [groups, setGroups] = useState<Group[]>(() =>
+    mockGroups.map((g) => ({
+      ...g,
+      members: g.members.map((m) => ({
+        ...m,
+        amountPaid: m.amountPaid ?? (m.hasPaid ? m.amountDue : 0),
+      })),
+    }))
+  );
   const [activities, setActivities] = useState<ActivityEntry[]>(() => mockActivities);
 
   const addGroup = useCallback((input: CreateGroupInput) => {
@@ -34,6 +42,7 @@ export function GroupProvider({ children }: PropsWithChildren) {
         id: createId(),
         name: m.name,
         amountDue: m.amountDue,
+        amountPaid: 0,
         hasPaid: false,
         insertedDate: new Date().toISOString(),
       })),
@@ -56,6 +65,7 @@ export function GroupProvider({ children }: PropsWithChildren) {
           members: g.members.map((m) => {
             if (m.id !== memberId) return m;
             const newPaid = !m.hasPaid;
+            const newAmountPaid = newPaid ? m.amountDue : 0;
             void requestToggleMemberPaid(groupId, memberId, newPaid);
 
             if (newPaid) {
@@ -64,14 +74,14 @@ export function GroupProvider({ children }: PropsWithChildren) {
                 groupId,
                 groupName: g.name,
                 memberName: m.name,
-                amount: m.amountDue,
+                amount: m.amountDue - (m.amountPaid ?? 0),
                 date: new Date().toISOString(),
                 status: 'confirmed',
               };
               setActivities((prev) => [activity, ...prev]);
             }
 
-            return { ...m, hasPaid: newPaid };
+            return { ...m, hasPaid: newPaid, amountPaid: newAmountPaid };
           }),
         };
       }),
@@ -90,6 +100,7 @@ export function GroupProvider({ children }: PropsWithChildren) {
               id: createId(),
               name,
               amountDue,
+              amountPaid: 0,
               hasPaid: false,
               insertedDate: new Date().toISOString(),
             },
@@ -108,9 +119,10 @@ export function GroupProvider({ children }: PropsWithChildren) {
           members: g.members.map((m) => {
             if (m.id !== memberId) return m;
             
-            // Deduct the payment
-            const newAmountDue = Math.max(0, m.amountDue - amount);
-            const newPaid = newAmountDue <= 0;
+            // Add the payment to amountPaid
+            const currentPaid = m.amountPaid ?? 0;
+            const newAmountPaid = currentPaid + amount;
+            const newPaid = newAmountPaid >= m.amountDue;
 
             void requestAddPayment(groupId, memberId, amount);
 
@@ -125,7 +137,7 @@ export function GroupProvider({ children }: PropsWithChildren) {
             };
             setActivities((prev) => [activity, ...prev]);
 
-            return { ...m, amountDue: newAmountDue, hasPaid: newPaid || m.hasPaid };
+            return { ...m, amountPaid: newAmountPaid, hasPaid: newPaid || m.hasPaid };
           }),
         };
       }),

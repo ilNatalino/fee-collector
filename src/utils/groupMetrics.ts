@@ -6,10 +6,9 @@ export const getGroupProgress = (group: Group) => {
   const paidMembers = group.members.filter((m) => m.hasPaid).length;
   const unpaidMembers = totalMembers - paidMembers;
   const collectedAmount = group.members
-    .filter((m) => m.hasPaid)
-    .reduce((sum, m) => sum + m.amountDue, 0);
+    .reduce((sum, m) => sum + (m.amountPaid ?? (m.hasPaid ? m.amountDue : 0)), 0);
   const remainingAmount = group.totalAmount - collectedAmount;
-  const progress = totalMembers === 0 ? 0 : Math.round((paidMembers / totalMembers) * 100);
+  const progress = group.totalAmount === 0 ? 0 : Math.min(100, Math.round((collectedAmount / group.totalAmount) * 100));
 
   return {
     totalMembers,
@@ -54,11 +53,10 @@ export const getQuotaSummary = (users: UserQuota[]): QuotaSummary => {
 
   const totalAmount = users.reduce((sum, user) => sum + user.amountDue, 0);
   const collectedAmount = users
-    .filter((user) => user.hasPaid)
-    .reduce((sum, user) => sum + user.amountDue, 0);
+    .reduce((sum, user) => sum + (user.amountPaid ?? (user.hasPaid ? user.amountDue : 0)), 0);
   const pendingAmount = totalAmount - collectedAmount;
 
-  const progress = totalUsers === 0 ? 0 : Math.round((paidUsers / totalUsers) * 100);
+  const progress = totalAmount === 0 ? 0 : Math.min(100, Math.round((collectedAmount / totalAmount) * 100));
 
   return {
     totalUsers,
