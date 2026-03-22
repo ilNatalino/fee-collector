@@ -115,7 +115,7 @@ export function GroupFormModal({ visible, onCancel, onSubmit }: GroupFormModalPr
   };
 
   return (
-    <Modal visible={visible} animationType="slide" transparent={false} onRequestClose={onCancel}>
+    <Modal visible={visible} animationType="slide" transparent={false} presentationStyle="pageSheet" onRequestClose={onCancel}>
       <SafeAreaView className="flex-1 bg-black dark:bg-zinc-950">
         <KeyboardAvoidingView 
           style={{ flex: 1 }} 
