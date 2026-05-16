@@ -8,7 +8,6 @@ import { getNavigationTheme } from '@/src/constants/theme';
 import { ColorSchemeProvider, useColorSchemeContext } from '@/src/providers/ColorSchemeProvider';
 import { GroupProvider } from '@/src/providers/GroupProvider';
 import { NavigationThemeProvider } from '@/src/providers/NavigationThemeProvider';
-import { UserActivityProvider } from '@/src/providers/UserActivityProvider';
 
 export {
     ErrorBoundary
@@ -22,11 +21,9 @@ export default function RootLayout() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <ColorSchemeProvider>
-        <UserActivityProvider>
-          <GroupProvider>
-            <RootLayoutNav />
-          </GroupProvider>
-        </UserActivityProvider>
+        <GroupProvider>
+          <RootLayoutNav />
+        </GroupProvider>
       </ColorSchemeProvider>
     </GestureHandlerRootView>
   );

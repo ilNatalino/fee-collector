@@ -23,3 +23,15 @@ export async function requestAddPayment(
 ): Promise<void> {
   return Promise.resolve();
 }
+
+export async function requestDeletePayment(_paymentId: string): Promise<void> {
+  return Promise.resolve();
+}
+
+export async function requestUpdatePayment(
+  _paymentId: string,
+  _memberName: string,
+  _amountCents: number,
+): Promise<void> {
+  return Promise.resolve();
+}

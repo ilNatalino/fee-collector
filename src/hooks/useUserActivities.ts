@@ -1,12 +1,19 @@
-import { useContext } from 'react';
-import { UserActivityContext } from '../providers/UserActivityProvider';
+import { UpdateUserActivityInput } from '../types/userActivity';
+import { getUserActivitiesFromGroups } from '../utils/groupPayments';
+import { eurosToCents } from '../utils/money';
+import { useGroups } from './useGroups';
 
 export function useUserActivities() {
-  const context = useContext(UserActivityContext);
-  
-  if (context === undefined) {
-    throw new Error('useUserActivities must be used within a UserActivityProvider');
-  }
-  
-  return context;
+  const { groups, deletePaymentById, updatePaymentById } = useGroups();
+
+  return {
+    activities: getUserActivitiesFromGroups(groups),
+    isLoading: false,
+    deleteActivityById: (id: string) => deletePaymentById(id),
+    updateActivityById: (id: string, payload: UpdateUserActivityInput) =>
+      updatePaymentById(id, {
+        memberName: payload.memberName,
+        amountCents: eurosToCents(payload.amount),
+      }),
+  };
 }
