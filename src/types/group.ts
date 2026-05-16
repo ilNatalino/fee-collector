@@ -1,6 +1,33 @@
-import { UserQuota } from './quota';
-
 export type GroupCategory = 'food' | 'travel' | 'home' | 'utilities';
+
+export type MoneyCents = number;
+
+export interface Member {
+  id: string;
+  fullName: string;
+  createdAt: string;
+}
+
+export interface Quota {
+  amountCents: MoneyCents;
+}
+
+export interface Payment {
+  id: string;
+  membershipId: string;
+  amountCents: MoneyCents;
+  recordedAt: string;
+  recordedMemberName: string;
+  recordedGroupName: string;
+}
+
+export interface Membership {
+  id: string;
+  member: Member;
+  joinedAt: string;
+  quota: Quota;
+  payments: Payment[];
+}
 
 export interface Group {
   id: string;
@@ -9,16 +36,16 @@ export interface Group {
   emoji?: string;
   createdDate: string;
   dueDate?: string;
-  totalAmount: number;
-  members: UserQuota[];
+  targetAmountCents: MoneyCents;
+  memberships: Membership[];
 }
 
 export interface GroupSummary {
   totalGroups: number;
   activeGroups: number;
-  totalCollected: number;
-  todayCollected: number;
-  totalPendingMembers: number;
+  totalCollectedCents: MoneyCents;
+  todayCollectedCents: MoneyCents;
+  totalPendingMemberships: number;
 }
 
 export interface ActivityEntry {
@@ -26,15 +53,18 @@ export interface ActivityEntry {
   groupId: string;
   groupName: string;
   memberName: string;
-  amount: number;
+  amountCents: MoneyCents;
   date: string;
   status: 'confirmed' | 'pending';
 }
 
 export type CreateGroupInput = {
   name: string;
-  category: GroupCategory;
+  category?: GroupCategory;
   emoji?: string;
-  totalAmount: number;
-  members: { name: string; amountDue: number }[];
+  targetAmountCents: MoneyCents;
+  memberships: {
+    memberName: string;
+    quotaAmountCents: MoneyCents;
+  }[];
 };

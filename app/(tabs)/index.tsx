@@ -8,7 +8,7 @@ import { GroupFormModal } from '@/src/components/GroupFormModal';
 import { Screen } from '@/src/components/Screen';
 import { useGroups } from '@/src/hooks/useGroups';
 import { useUserActivities } from '@/src/hooks/useUserActivities';
-import { getGroupsSummary } from '@/src/utils/groupMetrics';
+import { getGroupProgress, getGroupsSummary } from '@/src/utils/groupMetrics';
 
 export default function HomeScreen() {
   const { groups, addGroup } = useGroups();
@@ -17,15 +17,12 @@ export default function HomeScreen() {
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
 
-  const activeGroups = groups.filter((g) => {
-    const paidCount = g.members.filter((m) => m.hasPaid).length;
-    return paidCount < g.members.length;
-  });
+  const activeGroups = groups.filter((group) => getGroupProgress(group).progress < 100);
 
   const filteredGroups = searchQuery.trim()
     ? activeGroups.filter((g) =>
         g.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        g.members.some((m) => m.name.toLowerCase().includes(searchQuery.toLowerCase())),
+        g.memberships.some((membership) => membership.member.fullName.toLowerCase().includes(searchQuery.toLowerCase())),
       )
     : activeGroups;
 

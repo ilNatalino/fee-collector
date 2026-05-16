@@ -1,23 +1,12 @@
-export interface UserQuota {
-  id: string;
-  name: string;
-  amountDue: number;
-  amountPaid?: number;
-  hasPaid: boolean;
-  insertedDate: string;
-}
-
-export type UpdateQuotaInput = {
-  name: string;
-  amountDue: number;
-};
+import { MoneyCents } from './group';
 
 export interface QuotaSummary {
-  totalUsers: number;
-  paidUsers: number;
-  unpaidUsers: number;
-  totalAmount: number;
-  collectedAmount: number;
-  pendingAmount: number;
+  totalMemberships: number;
+  paidMemberships: number;
+  partialMemberships: number;
+  unpaidMemberships: number;
+  totalAmountCents: MoneyCents;
+  collectedAmountCents: MoneyCents;
+  remainingAmountCents: MoneyCents;
   progress: number;
 }

@@ -3,31 +3,32 @@ import { MotiView } from 'moti';
 import { useColorScheme } from 'nativewind';
 import { useEffect, useState } from 'react';
 import {
-    Keyboard,
-    KeyboardAvoidingView,
-    Modal,
-    Platform,
-    Pressable,
-    Text,
-    TextInput,
-    TouchableWithoutFeedback,
-    View,
+  Keyboard,
+  KeyboardAvoidingView,
+  Modal,
+  Platform,
+  Pressable,
+  Text,
+  TextInput,
+  TouchableWithoutFeedback,
+  View,
 } from 'react-native';
 
-import { UserQuota } from '@/src/types/quota';
+import { Membership } from '@/src/types/group';
+import { parseEuroInputToCents } from '@/src/utils/money';
 
 type AddPaymentModalProps = Readonly<{
   visible: boolean;
-  members: UserQuota[];
+  memberships: Membership[];
   onCancel: () => void;
-  onSubmit: (memberId: string, amount: number) => void;
+  onSubmit: (membershipId: string, amountCents: number) => void;
 }>;
 
-export function AddPaymentModal({ visible, members, onCancel, onSubmit }: AddPaymentModalProps) {
+export function AddPaymentModal({ visible, memberships, onCancel, onSubmit }: AddPaymentModalProps) {
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === 'dark';
 
-  const [selectedMemberId, setSelectedMemberId] = useState<string>('');
+  const [selectedMembershipId, setSelectedMembershipId] = useState<string>('');
   const [amountInput, setAmountInput] = useState('');
   const [amountError, setAmountError] = useState<string | null>(null);
   const [memberError, setMemberError] = useState<string | null>(null);
@@ -37,33 +38,33 @@ export function AddPaymentModal({ visible, members, onCancel, onSubmit }: AddPay
       return;
     }
 
-    if (members.length > 0) {
-      setSelectedMemberId(members[0].id);
+    if (memberships.length > 0) {
+      setSelectedMembershipId(memberships[0].id);
     } else {
-      setSelectedMemberId('');
+      setSelectedMembershipId('');
     }
     setAmountInput('');
     setAmountError(null);
     setMemberError(null);
-  }, [visible, members]);
+  }, [visible, memberships]);
 
   const handleSave = () => {
     let hasError = false;
 
-    if (!selectedMemberId) {
+    if (!selectedMembershipId) {
       setMemberError('Please select a member');
       hasError = true;
     }
 
-    const parsedAmount = Number.parseFloat(amountInput.replace(',', '.'));
-    if (!Number.isFinite(parsedAmount) || parsedAmount <= 0) {
+    const parsedAmountCents = parseEuroInputToCents(amountInput);
+    if (parsedAmountCents === null || parsedAmountCents <= 0) {
       setAmountError('Enter an amount greater than 0');
       hasError = true;
     }
 
-    if (hasError) return;
+    if (hasError || parsedAmountCents === null) return;
 
-    onSubmit(selectedMemberId, parsedAmount);
+    onSubmit(selectedMembershipId, parsedAmountCents);
   };
 
   return (
@@ -84,9 +85,9 @@ export function AddPaymentModal({ visible, members, onCancel, onSubmit }: AddPay
 
             <View className="border border-zinc-200 dark:border-zinc-800 rounded-xl bg-white dark:bg-zinc-900 overflow-hidden">
               <Picker
-                selectedValue={selectedMemberId}
+                selectedValue={selectedMembershipId}
                 onValueChange={(itemValue) => {
-                  setSelectedMemberId(itemValue);
+                  setSelectedMembershipId(itemValue);
                   if (memberError) setMemberError(null);
                 }}
                 style={{
@@ -98,8 +99,13 @@ export function AddPaymentModal({ visible, members, onCancel, onSubmit }: AddPay
                 prompt="Select a member"
               >
                 <Picker.Item label="Select a member..." value="" color={isDark ? '#a1a1aa' : '#71717a'} />
-                {members.map((m) => (
-                  <Picker.Item key={m.id} label={m.name} value={m.id} color={isDark ? '#f4f4f5' : '#18181b'} />
+                {memberships.map((membership) => (
+                  <Picker.Item
+                    key={membership.id}
+                    label={membership.member.fullName}
+                    value={membership.id}
+                    color={isDark ? '#f4f4f5' : '#18181b'}
+                  />
                 ))}
               </Picker>
             </View>

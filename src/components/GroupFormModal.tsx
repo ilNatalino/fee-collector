@@ -7,6 +7,9 @@ import { useEffect, useState } from 'react';
 import { KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { CreateGroupInput, GroupCategory } from '@/src/types/group';
+import { parseEuroInputToCents } from '@/src/utils/money';
+
 type MemberInput = {
   key: string;
   name: string;
@@ -16,23 +19,15 @@ type MemberInput = {
 type GroupFormModalProps = Readonly<{
   visible: boolean;
   onCancel: () => void;
-  onSubmit: (payload: {
-    name: string;
-    emoji: string;
-    category: any;
-    totalAmount: number;
-    members: { name: string; amountDue: number }[];
-  }) => void;
+  onSubmit: (payload: CreateGroupInput) => void;
 }>;
 
-const CATEGORIES = [
+const CATEGORIES: ReadonlyArray<{ id: GroupCategory; icon: typeof Utensils; emoji: string }> = [
   { id: 'food', icon: Utensils, emoji: '🍽️' },
   { id: 'travel', icon: Plane, emoji: '✈️' },
   { id: 'home', icon: Home, emoji: '🏠' },
-  { id: 'energy', icon: Zap, emoji: '⚡' },
+  { id: 'utilities', icon: Zap, emoji: '⚡' },
 ];
-
-const EMOJI_OPTIONS = ['🎁', '🍽️', '🎂', '✈️', '🎉', '🏠', '💰', '🎓'];
 
 const createMemberKey = () => `m-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
 
@@ -82,35 +77,40 @@ export function GroupFormModal({ visible, onCancel, onSubmit }: GroupFormModalPr
   };
 
   const handleSubmit = () => {
-    const parsedTotal = Number.parseFloat(totalAmount.replace(',', '.'));
+    const parsedTargetAmountCents = parseEuroInputToCents(totalAmount);
     if (!groupName.trim()) {
       setError('Enter a group name');
       return;
     }
-    if (!Number.isFinite(parsedTotal) || parsedTotal <= 0) {
+    if (parsedTargetAmountCents === null || parsedTargetAmountCents <= 0) {
       setError('Enter a valid total amount');
       return;
     }
 
-    const validMembers = members
+    const validMemberships = members
       .filter((m) => m.name.trim())
       .map((m) => ({
-        name: m.name.trim(),
-        amountDue: Number.parseFloat(m.amount.replace(',', '.')) || 0,
+        memberName: m.name.trim(),
+        quotaAmountCents: parseEuroInputToCents(m.amount) ?? 0,
       }));
 
-    if (validMembers.length === 0) {
+    if (validMemberships.length === 0) {
       setError('Add at least one member');
       return;
     }
 
-    const catId = CATEGORIES.find(c => c.emoji === selectedEmoji)?.id || 'food';
+    if (validMemberships.some((membership) => membership.quotaAmountCents <= 0)) {
+      setError('Enter a quota amount greater than 0 for every member');
+      return;
+    }
+
+    const catId = CATEGORIES.find((category) => category.emoji === selectedEmoji)?.id ?? 'food';
     onSubmit({
       name: groupName.trim(),
       emoji: selectedEmoji,
       category: catId,
-      totalAmount: parsedTotal,
-      members: validMembers,
+      targetAmountCents: parsedTargetAmountCents,
+      memberships: validMemberships,
     });
   };
 
@@ -228,7 +228,7 @@ export function GroupFormModal({ visible, onCancel, onSubmit }: GroupFormModalPr
                     </Text>
                   </View>
                 ) : (
-                  members.map((member, index) => {
+                  members.map((member) => {
                     const initial = member.name ? member.name.charAt(0).toUpperCase() : '?';
                     return (
                       <View key={member.key} className="flex-row items-center justify-between mb-5">
@@ -239,11 +239,22 @@ export function GroupFormModal({ visible, onCancel, onSubmit }: GroupFormModalPr
                           <View className="flex-1 mr-4">
                             <TextInput
                               value={member.name}
-                              onChangeText={(v) => updateMember(member.key, 'name', v)}
+                              onChangeText={(value) => updateMember(member.key, 'name', value)}
                               placeholder="Name"
                               placeholderTextColor="#94a3b8"
                               className="text-[17px] font-bold text-slate-800 dark:text-zinc-100 p-0"
                             />
+                            <View className="mt-2 flex-row items-center rounded-xl border border-zinc-200 dark:border-zinc-700/50 bg-zinc-50 dark:bg-zinc-900/50 px-3 py-2.5">
+                              <Text className="text-[15px] font-semibold text-slate-500 dark:text-zinc-400 mr-2">€</Text>
+                              <TextInput
+                                value={member.amount}
+                                onChangeText={(value) => updateMember(member.key, 'amount', value)}
+                                placeholder="Quota"
+                                placeholderTextColor={isDark ? '#71717a' : '#94a3b8'}
+                                keyboardType="decimal-pad"
+                                className="flex-1 text-[15px] font-semibold text-slate-800 dark:text-zinc-100 p-0"
+                              />
+                            </View>
                           </View>
                         </View>
                         

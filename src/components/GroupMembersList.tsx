@@ -4,26 +4,20 @@ import { useColorScheme } from 'nativewind';
 import { ScrollView, Text, View } from 'react-native';
 
 import { AnimatedPressable } from '@/src/components/AnimatedPressable';
-import { UserQuota } from '@/src/types/quota';
+import { Membership } from '@/src/types/group';
+import { getMembershipCollectedAmountCents, getMembershipQuotaStatus } from '@/src/utils/membershipMetrics';
+import { formatCents } from '@/src/utils/money';
 
 interface GroupMembersListProps {
-  members: UserQuota[];
+  memberships: Membership[];
 }
 
-export function GroupMembersList({ members }: GroupMembersListProps) {
+export function GroupMembersList({ memberships }: GroupMembersListProps) {
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === 'dark';
 
   const getInitials = (name: string) => {
     return name.split(' ').map((n) => n[0]).join('').substring(0, 2).toUpperCase();
-  };
-
-  const getFirstName = (name: string) => {
-    const parts = name.split(' ');
-    if (parts.length > 1) {
-      return `${parts[0]} ${parts[1][0]}.`;
-    }
-    return parts[0];
   };
 
   return (
@@ -32,14 +26,15 @@ export function GroupMembersList({ members }: GroupMembersListProps) {
       contentContainerStyle={{ paddingBottom: 24 }}
       className="w-full"
     >
-      {members.map((member, index) => {
-        const amountPaid = member.amountPaid ?? (member.hasPaid ? member.amountDue : 0);
-        const isPartial = amountPaid > 0 && amountPaid < member.amountDue;
-        const isFullyPaid = member.hasPaid || amountPaid >= member.amountDue;
+      {memberships.map((membership, index) => {
+        const collectedAmountCents = getMembershipCollectedAmountCents(membership);
+        const quotaStatus = getMembershipQuotaStatus(membership);
+        const isPartial = quotaStatus === 'partial';
+        const isFullyPaid = quotaStatus === 'paid';
 
         return (
           <MotiView
-            key={member.id}
+            key={membership.id}
             from={{ opacity: 0, translateY: 20 }}
             animate={{ opacity: 1, translateY: 0 }}
             transition={{ type: 'spring', damping: 20, stiffness: 90, delay: index * 50 }}
@@ -57,7 +52,7 @@ export function GroupMembersList({ members }: GroupMembersListProps) {
                     isPartial ? 'text-amber-700 dark:text-amber-400' :
                     'text-zinc-900 dark:text-zinc-100'
                   }`}>
-                    {getInitials(member.name)}
+                    {getInitials(membership.member.fullName)}
                   </Text>
                 </View>
                 
@@ -76,7 +71,7 @@ export function GroupMembersList({ members }: GroupMembersListProps) {
               
               <View className="flex-1 justify-center">
                 <Text className="text-[15px] font-semibold text-zinc-900 dark:text-zinc-100" numberOfLines={1}>
-                  {member.name}
+                  {membership.member.fullName}
                 </Text>
                 <Text className="text-xs font-medium text-zinc-500 dark:text-zinc-400 mt-0.5" numberOfLines={1}>
                   {isFullyPaid ? 'Paid in full' : isPartial ? 'Partially paid' : ''}
@@ -89,11 +84,11 @@ export function GroupMembersList({ members }: GroupMembersListProps) {
                   isPartial ? 'text-amber-600 dark:text-amber-400' :
                   'text-zinc-900 dark:text-zinc-100'
                 }`}>
-                  €{member.amountDue.toFixed(2)}
+                  €{formatCents(membership.quota.amountCents)}
                 </Text>
                 {isPartial && (
                   <Text className="text-[10px] font-medium text-zinc-500 dark:text-zinc-400 mt-0.5">
-                    €{amountPaid.toFixed(2)} paid
+                    €{formatCents(collectedAmountCents)} paid
                   </Text>
                 )}
               </View>

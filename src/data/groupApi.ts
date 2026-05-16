@@ -10,7 +10,7 @@ export async function requestDeleteGroup(_groupId: string): Promise<void> {
 
 export async function requestToggleMemberPaid(
   _groupId: string,
-  _memberId: string,
+  _membershipId: string,
   _hasPaid: boolean,
 ): Promise<void> {
   return Promise.resolve();
@@ -18,8 +18,8 @@ export async function requestToggleMemberPaid(
 
 export async function requestAddPayment(
   _groupId: string,
-  _memberId: string,
-  _amount: number,
+  _membershipId: string,
+  _amountCents: number,
 ): Promise<void> {
   return Promise.resolve();
 }

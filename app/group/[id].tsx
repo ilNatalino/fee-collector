@@ -16,12 +16,11 @@ export default function GroupDetailsScreen() {
   const router = useRouter();
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === 'dark';
-  const { groups, activities, addPayment } = useGroups();
+  const { groups, addPayment } = useGroups();
   
   const [isPaymentModalVisible, setIsPaymentModalVisible] = useState(false);
 
   const group = groups.find((g) => g.id === id);
-  const groupActivities = activities.filter((a) => a.groupId === id);
 
   if (!group) {
     return (
@@ -89,7 +88,7 @@ export default function GroupDetailsScreen() {
             </AnimatedPressable>
           </View>
 
-          <GroupMembersList members={group.members} />
+          <GroupMembersList memberships={group.memberships} />
 
           {/* Payment History */}
           {/* <View className="flex-row justify-between items-center mb-4 mt-6">
@@ -111,10 +110,10 @@ export default function GroupDetailsScreen() {
 
       <AddPaymentModal
         visible={isPaymentModalVisible}
-        members={group.members}
+        memberships={group.memberships}
         onCancel={() => setIsPaymentModalVisible(false)}
-        onSubmit={(memberId, amount) => {
-          void addPayment(group.id, memberId, amount);
+        onSubmit={(membershipId, amountCents) => {
+          void addPayment(group.id, membershipId, amountCents);
           setIsPaymentModalVisible(false);
         }}
       />

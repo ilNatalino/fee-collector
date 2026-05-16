@@ -1,21 +1,30 @@
-import { Group } from '@/src/types/group';
-import { QuotaSummary, UserQuota } from '@/src/types/quota';
+import { Group, Membership } from '@/src/types/group';
+import { QuotaSummary } from '@/src/types/quota';
+
+import { getMembershipCollectedAmountCents, getMembershipQuotaStatus } from './membershipMetrics';
 
 export const getGroupProgress = (group: Group) => {
-  const totalMembers = group.members.length;
-  const paidMembers = group.members.filter((m) => m.hasPaid).length;
-  const unpaidMembers = totalMembers - paidMembers;
-  const collectedAmount = group.members
-    .reduce((sum, m) => sum + (m.amountPaid ?? (m.hasPaid ? m.amountDue : 0)), 0);
-  const remainingAmount = group.totalAmount - collectedAmount;
-  const progress = group.totalAmount === 0 ? 0 : Math.min(100, Math.round((collectedAmount / group.totalAmount) * 100));
+  const totalMemberships = group.memberships.length;
+  const paidMemberships = group.memberships.filter((membership) => getMembershipQuotaStatus(membership) === 'paid').length;
+  const partialMemberships = group.memberships.filter((membership) => getMembershipQuotaStatus(membership) === 'partial').length;
+  const unpaidMemberships = totalMemberships - paidMemberships - partialMemberships;
+  const collectedAmountCents = group.memberships.reduce(
+    (sum, membership) => sum + getMembershipCollectedAmountCents(membership),
+    0,
+  );
+  const remainingAmountCents = Math.max(0, group.targetAmountCents - collectedAmountCents);
+  const progress =
+    group.targetAmountCents === 0
+      ? 0
+      : Math.min(100, Math.round((collectedAmountCents / group.targetAmountCents) * 100));
 
   return {
-    totalMembers,
-    paidMembers,
-    unpaidMembers,
-    collectedAmount,
-    remainingAmount,
+    totalMemberships,
+    paidMemberships,
+    partialMemberships,
+    unpaidMemberships,
+    collectedAmountCents,
+    remainingAmountCents,
     progress,
   };
 };
@@ -29,42 +38,47 @@ export const getGroupsSummary = (groups: Group[]) => {
 
   const totalCollected = groups.reduce((sum, g) => {
     const progress = getGroupProgress(g);
-    return sum + progress.collectedAmount;
+    return sum + progress.collectedAmountCents;
   }, 0);
 
-  const totalPendingMembers = groups.reduce((sum, g) => {
+  const totalPendingMemberships = groups.reduce((sum, g) => {
     const progress = getGroupProgress(g);
-    return sum + progress.unpaidMembers;
+    return sum + progress.unpaidMemberships + progress.partialMemberships;
   }, 0);
 
   return {
     totalGroups,
     activeGroups,
-    totalCollected,
-    todayCollected: 75,
-    totalPendingMembers,
+    totalCollectedCents: totalCollected,
+    todayCollectedCents: 7500,
+    totalPendingMemberships,
   };
 };
 
-export const getQuotaSummary = (users: UserQuota[]): QuotaSummary => {
-  const totalUsers = users.length;
-  const paidUsers = users.filter((user) => user.hasPaid).length;
-  const unpaidUsers = totalUsers - paidUsers;
+export const getQuotaSummary = (memberships: Membership[]): QuotaSummary => {
+  const totalMemberships = memberships.length;
+  const paidMemberships = memberships.filter((membership) => getMembershipQuotaStatus(membership) === 'paid').length;
+  const partialMemberships = memberships.filter((membership) => getMembershipQuotaStatus(membership) === 'partial').length;
+  const unpaidMemberships = totalMemberships - paidMemberships - partialMemberships;
 
-  const totalAmount = users.reduce((sum, user) => sum + user.amountDue, 0);
-  const collectedAmount = users
-    .reduce((sum, user) => sum + (user.amountPaid ?? (user.hasPaid ? user.amountDue : 0)), 0);
-  const pendingAmount = totalAmount - collectedAmount;
+  const totalAmountCents = memberships.reduce((sum, membership) => sum + membership.quota.amountCents, 0);
+  const collectedAmountCents = memberships.reduce(
+    (sum, membership) => sum + getMembershipCollectedAmountCents(membership),
+    0,
+  );
+  const remainingAmountCents = Math.max(0, totalAmountCents - collectedAmountCents);
 
-  const progress = totalAmount === 0 ? 0 : Math.min(100, Math.round((collectedAmount / totalAmount) * 100));
+  const progress =
+    totalAmountCents === 0 ? 0 : Math.min(100, Math.round((collectedAmountCents / totalAmountCents) * 100));
 
   return {
-    totalUsers,
-    paidUsers,
-    unpaidUsers,
-    totalAmount,
-    collectedAmount,
-    pendingAmount,
+    totalMemberships,
+    paidMemberships,
+    partialMemberships,
+    unpaidMemberships,
+    totalAmountCents,
+    collectedAmountCents,
+    remainingAmountCents,
     progress,
   };
 };

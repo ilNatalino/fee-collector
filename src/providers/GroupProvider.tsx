@@ -2,49 +2,68 @@ import { createContext, PropsWithChildren, useCallback, useContext, useMemo, use
 
 import { requestAddPayment, requestCreateGroup, requestDeleteGroup, requestToggleMemberPaid } from '@/src/data/groupApi';
 import { mockActivities, mockGroups } from '@/src/data/mockGroups';
-import { ActivityEntry, CreateGroupInput, Group } from '@/src/types/group';
+import { ActivityEntry, CreateGroupInput, Group, Membership, Payment } from '@/src/types/group';
+
+import { getMembershipRemainingAmountCents } from '../utils/membershipMetrics';
 
 type GroupContextValue = {
   groups: Group[];
   activities: ActivityEntry[];
   addGroup: (input: CreateGroupInput) => void;
   deleteGroup: (groupId: string) => Promise<void>;
-  toggleMemberPaid: (groupId: string, memberId: string) => Promise<void>;
-  addMemberToGroup: (groupId: string, name: string, amountDue: number) => void;
-  addPayment: (groupId: string, memberId: string, amount: number) => Promise<void>;
+  toggleMemberPaid: (groupId: string, membershipId: string) => Promise<void>;
+  addMemberToGroup: (groupId: string, fullName: string, quotaAmountCents: number) => void;
+  addPayment: (groupId: string, membershipId: string, amountCents: number) => Promise<void>;
 };
 
 const GroupContext = createContext<GroupContextValue | undefined>(undefined);
 
 const createId = () => `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 
+const buildPayment = (group: Group, membership: Membership, amountCents: number, paymentId = createId()): Payment => ({
+  id: paymentId,
+  membershipId: membership.id,
+  amountCents,
+  recordedAt: new Date().toISOString(),
+  recordedMemberName: membership.member.fullName,
+  recordedGroupName: group.name,
+});
+
+const buildActivityEntry = (group: Group, membership: Membership, amountCents: number): ActivityEntry => ({
+  id: createId(),
+  groupId: group.id,
+  groupName: group.name,
+  memberName: membership.member.fullName,
+  amountCents,
+  date: new Date().toISOString(),
+  status: 'confirmed',
+});
+
 export function GroupProvider({ children }: PropsWithChildren) {
-  const [groups, setGroups] = useState<Group[]>(() =>
-    mockGroups.map((g) => ({
-      ...g,
-      members: g.members.map((m) => ({
-        ...m,
-        amountPaid: m.amountPaid ?? (m.hasPaid ? m.amountDue : 0),
-      })),
-    }))
-  );
+  const [groups, setGroups] = useState<Group[]>(() => mockGroups);
   const [activities, setActivities] = useState<ActivityEntry[]>(() => mockActivities);
 
   const addGroup = useCallback((input: CreateGroupInput) => {
+    const createdAt = new Date().toISOString();
     const newGroup: Group = {
       id: createId(),
       name: input.name,
       category: input.category,
       emoji: input.emoji,
-      createdDate: new Date().toISOString(),
-      totalAmount: input.totalAmount,
-      members: input.members.map((m) => ({
+      createdDate: createdAt,
+      targetAmountCents: input.targetAmountCents,
+      memberships: input.memberships.map((membershipInput) => ({
         id: createId(),
-        name: m.name,
-        amountDue: m.amountDue,
-        amountPaid: 0,
-        hasPaid: false,
-        insertedDate: new Date().toISOString(),
+        joinedAt: createdAt,
+        member: {
+          id: createId(),
+          fullName: membershipInput.memberName,
+          createdAt,
+        },
+        quota: {
+          amountCents: membershipInput.quotaAmountCents,
+        },
+        payments: [],
       })),
     };
     void requestCreateGroup(input);
@@ -56,53 +75,54 @@ export function GroupProvider({ children }: PropsWithChildren) {
     setGroups((current) => current.filter((g) => g.id !== groupId));
   }, []);
 
-  const toggleMemberPaid = useCallback(async (groupId: string, memberId: string) => {
+  const toggleMemberPaid = useCallback(async (groupId: string, membershipId: string) => {
     setGroups((current) =>
       current.map((g) => {
         if (g.id !== groupId) return g;
         return {
           ...g,
-          members: g.members.map((m) => {
-            if (m.id !== memberId) return m;
-            const newPaid = !m.hasPaid;
-            const newAmountPaid = newPaid ? m.amountDue : 0;
-            void requestToggleMemberPaid(groupId, memberId, newPaid);
+          memberships: g.memberships.map((membership) => {
+            if (membership.id !== membershipId) return membership;
 
-            if (newPaid) {
-              const activity: ActivityEntry = {
-                id: createId(),
-                groupId,
-                groupName: g.name,
-                memberName: m.name,
-                amount: m.amountDue - (m.amountPaid ?? 0),
-                date: new Date().toISOString(),
-                status: 'confirmed',
-              };
+            const remainingAmountCents = getMembershipRemainingAmountCents(membership);
+            const nextPayments =
+              remainingAmountCents > 0 ? [...membership.payments, buildPayment(g, membership, remainingAmountCents)] : [];
+
+            void requestToggleMemberPaid(groupId, membershipId, remainingAmountCents > 0);
+
+            if (remainingAmountCents > 0) {
+              const activity = buildActivityEntry(g, membership, remainingAmountCents);
               setActivities((prev) => [activity, ...prev]);
             }
 
-            return { ...m, hasPaid: newPaid, amountPaid: newAmountPaid };
+            return { ...membership, payments: nextPayments };
           }),
         };
       }),
     );
   }, []);
 
-  const addMemberToGroup = useCallback((groupId: string, name: string, amountDue: number) => {
+  const addMemberToGroup = useCallback((groupId: string, fullName: string, quotaAmountCents: number) => {
+    const createdAt = new Date().toISOString();
     setGroups((current) =>
       current.map((g) => {
         if (g.id !== groupId) return g;
         return {
           ...g,
-          members: [
-            ...g.members,
+          memberships: [
+            ...g.memberships,
             {
               id: createId(),
-              name,
-              amountDue,
-              amountPaid: 0,
-              hasPaid: false,
-              insertedDate: new Date().toISOString(),
+              joinedAt: createdAt,
+              member: {
+                id: createId(),
+                fullName,
+                createdAt,
+              },
+              quota: {
+                amountCents: quotaAmountCents,
+              },
+              payments: [],
             },
           ],
         };
@@ -110,34 +130,22 @@ export function GroupProvider({ children }: PropsWithChildren) {
     );
   }, []);
 
-  const addPayment = useCallback(async (groupId: string, memberId: string, amount: number) => {
+  const addPayment = useCallback(async (groupId: string, membershipId: string, amountCents: number) => {
     setGroups((current) =>
       current.map((g) => {
         if (g.id !== groupId) return g;
         return {
           ...g,
-          members: g.members.map((m) => {
-            if (m.id !== memberId) return m;
-            
-            // Add the payment to amountPaid
-            const currentPaid = m.amountPaid ?? 0;
-            const newAmountPaid = currentPaid + amount;
-            const newPaid = newAmountPaid >= m.amountDue;
+          memberships: g.memberships.map((membership) => {
+            if (membership.id !== membershipId) return membership;
 
-            void requestAddPayment(groupId, memberId, amount);
+            void requestAddPayment(groupId, membershipId, amountCents);
 
-            const activity: ActivityEntry = {
-              id: createId(),
-              groupId,
-              groupName: g.name,
-              memberName: m.name,
-              amount: amount,
-              date: new Date().toISOString(),
-              status: 'confirmed',
-            };
+            const payment = buildPayment(g, membership, amountCents);
+            const activity = buildActivityEntry(g, membership, amountCents);
             setActivities((prev) => [activity, ...prev]);
 
-            return { ...m, amountPaid: newAmountPaid, hasPaid: newPaid || m.hasPaid };
+            return { ...membership, payments: [...membership.payments, payment] };
           }),
         };
       }),
