@@ -2,8 +2,9 @@ import { describe, expect, it } from 'vitest';
 
 import { mockGroups } from '../data/mockGroups';
 
+import { deletePaymentInGroups, editPaymentInGroups } from './groupCommands';
 import { getGroupProgress } from './groupMetrics';
-import { deletePaymentInGroups, getUserActivitiesFromGroups, updatePaymentInGroups } from './groupPayments';
+import { getUserActivitiesFromGroups } from './groupPayments';
 
 describe('group payments', () => {
   it('keeps activity reads and group totals in sync after editing a payment', () => {
@@ -13,8 +14,7 @@ describe('group payments', () => {
     expect(originalGroup).toBeDefined();
 
     const originalCollectedAmountCents = getGroupProgress(originalGroup!).collectedAmountCents;
-    const updatedGroups = updatePaymentInGroups(mockGroups, targetPaymentId, {
-      memberName: 'Luca Ferri',
+    const updatedGroups = editPaymentInGroups(mockGroups, targetPaymentId, {
       amountCents: 9000,
     });
     const updatedGroup = updatedGroups.find((group) => group.id === 'g4');
@@ -26,8 +26,7 @@ describe('group payments', () => {
 
   it('keeps activity reads and group totals in sync after deleting a payment', () => {
     const targetPaymentId = 'p-g4-v3';
-    const updatedGroups = updatePaymentInGroups(mockGroups, targetPaymentId, {
-      memberName: 'Luca Ferri',
+    const updatedGroups = editPaymentInGroups(mockGroups, targetPaymentId, {
       amountCents: 9000,
     });
     const updatedGroup = updatedGroups.find((group) => group.id === 'g4');

@@ -11,7 +11,7 @@ import { useUserActivities } from '@/src/hooks/useUserActivities';
 import { getGroupProgress, getGroupsSummary } from '@/src/utils/groupMetrics';
 
 export default function HomeScreen() {
-  const { groups, addGroup } = useGroups();
+  const { groups, createGroup } = useGroups();
   const { activities } = useUserActivities();
   const summary = getGroupsSummary(groups);
   const [isModalVisible, setIsModalVisible] = useState(false);
@@ -116,7 +116,7 @@ export default function HomeScreen() {
         visible={isModalVisible}
         onCancel={() => setIsModalVisible(false)}
         onSubmit={(payload) => {
-          addGroup(payload);
+          createGroup(payload);
           setIsModalVisible(false);
         }}
       />

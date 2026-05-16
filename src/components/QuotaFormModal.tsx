@@ -5,29 +5,28 @@ import { Modal, Pressable, Text, TextInput, View } from 'react-native';
 type QuotaFormModalProps = Readonly<{
   visible: boolean;
   title: string;
+  description?: string;
   confirmLabel: string;
   cancelLabel?: string;
   cancelAccessibilityLabel: string;
   confirmAccessibilityLabel: string;
-  initialName?: string;
   initialAmount?: number;
   onCancel: () => void;
-  onSubmit: (payload: { name: string; amount: number }) => void;
+  onSubmit: (payload: { amount: number }) => void;
 }>;
 
 export function QuotaFormModal({
   visible,
   title,
+  description,
   confirmLabel,
   cancelLabel = 'Cancel',
   cancelAccessibilityLabel,
   confirmAccessibilityLabel,
-  initialName = '',
   initialAmount,
   onCancel,
   onSubmit,
 }: QuotaFormModalProps) {
-  const [nameInput, setNameInput] = useState('');
   const [amountInput, setAmountInput] = useState('');
   const [amountError, setAmountError] = useState<string | null>(null);
 
@@ -36,10 +35,9 @@ export function QuotaFormModal({
       return;
     }
 
-    setNameInput(initialName);
     setAmountInput(initialAmount ? `${initialAmount}` : '');
     setAmountError(null);
-  }, [initialAmount, initialName, visible]);
+  }, [initialAmount, visible]);
 
   const handleSave = () => {
     const parsedAmount = Number.parseFloat(amountInput.replace(',', '.'));
@@ -49,7 +47,6 @@ export function QuotaFormModal({
     }
 
     onSubmit({
-      name: nameInput.trim() || 'New User',
       amount: parsedAmount,
     });
     setAmountError(null);
@@ -66,13 +63,9 @@ export function QuotaFormModal({
           <View className="shadow-lg shadow-zinc-950/10 dark:ring-white/10 rounded-2xl p-4 gap-y-2.5 bg-white dark:bg-zinc-900">
             <Text className="text-lg font-bold text-zinc-900 dark:text-zinc-100 mb-1">{title}</Text>
 
-            <TextInput
-              value={nameInput}
-              onChangeText={setNameInput}
-              placeholder="Name"
-              placeholderTextColor="#a1a1aa"
-              className="border border-zinc-200 dark:border-zinc-800 rounded-xl px-3 py-2.5 text-sm text-zinc-900 dark:text-zinc-100"
-            />
+            {description ? (
+              <Text className="text-sm text-zinc-500 dark:text-zinc-400">{description}</Text>
+            ) : null}
 
             <TextInput
               value={amountInput}

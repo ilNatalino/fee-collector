@@ -16,7 +16,7 @@ export default function GroupDetailsScreen() {
   const router = useRouter();
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === 'dark';
-  const { groups, addPayment } = useGroups();
+  const { groups, recordPayment } = useGroups();
   
   const [isPaymentModalVisible, setIsPaymentModalVisible] = useState(false);
 
@@ -113,7 +113,7 @@ export default function GroupDetailsScreen() {
         memberships={group.memberships}
         onCancel={() => setIsPaymentModalVisible(false)}
         onSubmit={(membershipId, amountCents) => {
-          void addPayment(group.id, membershipId, amountCents);
+          void recordPayment(group.id, membershipId, amountCents);
           setIsPaymentModalVisible(false);
         }}
       />

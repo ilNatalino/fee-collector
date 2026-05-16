@@ -5,11 +5,14 @@ import { QuotaFormModal } from '@/src/components/QuotaFormModal';
 import { Screen } from '@/src/components/Screen';
 import { SwipeableList } from '@/src/components/SwipeableList';
 import { UserActivityItem } from '@/src/components/UserActivityItem';
+import { useGroups } from '@/src/hooks/useGroups';
 import { useUserActivities } from '@/src/hooks/useUserActivities';
 import { UserActivity } from '@/src/types/userActivity';
+import { eurosToCents } from '@/src/utils/money';
 
 export default function PaymentsScreen() {
-  const { activities, deleteActivityById, updateActivityById } = useUserActivities();
+  const { activities } = useUserActivities();
+  const { deletePayment, editPayment } = useGroups();
   const [activityToDelete, setActivityToDelete] = useState<UserActivity | null>(null);
   const [activityToEdit, setActivityToEdit] = useState<UserActivity | null>(null);
 
@@ -21,18 +24,17 @@ export default function PaymentsScreen() {
       return;
     }
 
-    await deleteActivityById(activityToDelete.id);
+    await deletePayment(activityToDelete.id);
     closeDeleteModal();
   };
 
-  const handleConfirmEdit = async ({ name, amount }: { name: string; amount: number }) => {
+  const handleConfirmEdit = async ({ amount }: { amount: number }) => {
     if (!activityToEdit) {
       return;
     }
 
-    await updateActivityById(activityToEdit.id, {
-      memberName: name,
-      amount: amount,
+    await editPayment(activityToEdit.id, {
+      amountCents: eurosToCents(amount),
     });
     closeEditModal();
   };
@@ -51,11 +53,11 @@ export default function PaymentsScreen() {
 
       <QuotaFormModal
         visible={Boolean(activityToEdit)}
-        title="Edit activity"
+        title="Edit payment"
+        description={activityToEdit ? `Recorded for ${activityToEdit.memberName}` : undefined}
         confirmLabel="Save"
-        cancelAccessibilityLabel="Cancel edit activity"
-        confirmAccessibilityLabel="Confirm edit activity"
-        initialName={activityToEdit?.memberName}
+        cancelAccessibilityLabel="Cancel edit payment"
+        confirmAccessibilityLabel="Confirm edit payment"
         initialAmount={activityToEdit?.amount}
         onCancel={closeEditModal}
         onSubmit={(payload) => {
@@ -65,12 +67,12 @@ export default function PaymentsScreen() {
 
       <DeleteConfirmationModal
         visible={Boolean(activityToDelete)}
-        title="Delete activity"
-        message={`Are you sure you want to delete activity of ${activityToDelete?.memberName ?? 'this user'}?`}
+        title="Delete payment"
+        message={`Are you sure you want to delete the payment recorded for ${activityToDelete?.memberName ?? 'this member'}?`}
         cancelLabel="Cancel"
         confirmLabel="Delete"
-        cancelAccessibilityLabel="Cancel delete activity"
-        confirmAccessibilityLabel="Confirm delete activity"
+        cancelAccessibilityLabel="Cancel delete payment"
+        confirmAccessibilityLabel="Confirm delete payment"
         onCancel={closeDeleteModal}
         onConfirm={() => {
           void handleConfirmDelete();

@@ -1,47 +1,37 @@
 import { createContext, PropsWithChildren, useCallback, useContext, useMemo, useState } from 'react';
 
 import {
-    requestAddPayment,
     requestCreateGroup,
     requestDeleteGroup,
     requestDeletePayment,
-    requestToggleMemberPaid,
-    requestUpdatePayment,
+    requestEditPayment,
+    requestRecordPayment,
 } from '@/src/data/groupApi';
 import { mockGroups } from '@/src/data/mockGroups';
-import { CreateGroupInput, Group, Membership, Payment } from '@/src/types/group';
-import { deletePaymentInGroups, updatePaymentInGroups, UpdatePaymentInput } from '@/src/utils/groupPayments';
+import { CreateGroupInput, Group } from '@/src/types/group';
+import { deletePaymentInGroups, editPaymentInGroups, EditPaymentInput, recordPaymentInGroups } from '@/src/utils/groupCommands';
 
 import { getMembershipRemainingAmountCents } from '../utils/membershipMetrics';
 
 type GroupContextValue = {
   groups: Group[];
-  addGroup: (input: CreateGroupInput) => void;
+  createGroup: (input: CreateGroupInput) => void;
   deleteGroup: (groupId: string) => Promise<void>;
-  toggleMemberPaid: (groupId: string, membershipId: string) => Promise<void>;
-  addMemberToGroup: (groupId: string, fullName: string, quotaAmountCents: number) => void;
-  addPayment: (groupId: string, membershipId: string, amountCents: number) => Promise<void>;
-  deletePaymentById: (paymentId: string) => Promise<void>;
-  updatePaymentById: (paymentId: string, input: UpdatePaymentInput) => Promise<void>;
+  addMembership: (groupId: string, fullName: string, quotaAmountCents: number) => void;
+  recordPayment: (groupId: string, membershipId: string, amountCents: number) => Promise<void>;
+  markMembershipAsPaid: (groupId: string, membershipId: string) => Promise<void>;
+  deletePayment: (paymentId: string) => Promise<void>;
+  editPayment: (paymentId: string, input: EditPaymentInput) => Promise<void>;
 };
 
 const GroupContext = createContext<GroupContextValue | undefined>(undefined);
 
 const createId = () => `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 
-const buildPayment = (group: Group, membership: Membership, amountCents: number, paymentId = createId()): Payment => ({
-  id: paymentId,
-  membershipId: membership.id,
-  amountCents,
-  recordedAt: new Date().toISOString(),
-  recordedMemberName: membership.member.fullName,
-  recordedGroupName: group.name,
-});
-
 export function GroupProvider({ children }: PropsWithChildren) {
   const [groups, setGroups] = useState<Group[]>(() => mockGroups);
 
-  const addGroup = useCallback((input: CreateGroupInput) => {
+  const createGroup = useCallback((input: CreateGroupInput) => {
     const createdAt = new Date().toISOString();
     const newGroup: Group = {
       id: createId(),
@@ -73,29 +63,7 @@ export function GroupProvider({ children }: PropsWithChildren) {
     setGroups((current) => current.filter((g) => g.id !== groupId));
   }, []);
 
-  const toggleMemberPaid = useCallback(async (groupId: string, membershipId: string) => {
-    setGroups((current) =>
-      current.map((g) => {
-        if (g.id !== groupId) return g;
-        return {
-          ...g,
-          memberships: g.memberships.map((membership) => {
-            if (membership.id !== membershipId) return membership;
-
-            const remainingAmountCents = getMembershipRemainingAmountCents(membership);
-            const nextPayments =
-              remainingAmountCents > 0 ? [...membership.payments, buildPayment(g, membership, remainingAmountCents)] : [];
-
-            void requestToggleMemberPaid(groupId, membershipId, remainingAmountCents > 0);
-
-            return { ...membership, payments: nextPayments };
-          }),
-        };
-      }),
-    );
-  }, []);
-
-  const addMemberToGroup = useCallback((groupId: string, fullName: string, quotaAmountCents: number) => {
+  const addMembership = useCallback((groupId: string, fullName: string, quotaAmountCents: number) => {
     const createdAt = new Date().toISOString();
     setGroups((current) =>
       current.map((g) => {
@@ -123,48 +91,72 @@ export function GroupProvider({ children }: PropsWithChildren) {
     );
   }, []);
 
-  const addPayment = useCallback(async (groupId: string, membershipId: string, amountCents: number) => {
-    setGroups((current) =>
-      current.map((g) => {
-        if (g.id !== groupId) return g;
-        return {
-          ...g,
-          memberships: g.memberships.map((membership) => {
-            if (membership.id !== membershipId) return membership;
+  const recordPayment = useCallback(async (groupId: string, membershipId: string, amountCents: number) => {
+    const nextGroups = recordPaymentInGroups(groups, {
+      groupId,
+      membershipId,
+      amountCents,
+    });
 
-            void requestAddPayment(groupId, membershipId, amountCents);
+    if (nextGroups === groups) {
+      return;
+    }
 
-            const payment = buildPayment(g, membership, amountCents);
+    setGroups(nextGroups);
+    await requestRecordPayment(groupId, membershipId, amountCents);
+  }, [groups]);
 
-            return { ...membership, payments: [...membership.payments, payment] };
-          }),
-        };
-      }),
-    );
-  }, []);
+  const markMembershipAsPaid = useCallback(async (groupId: string, membershipId: string) => {
+    const membership = groups
+      .find((group) => group.id === groupId)
+      ?.memberships.find((candidateMembership) => candidateMembership.id === membershipId);
 
-  const deletePaymentById = useCallback(async (paymentId: string) => {
+    if (!membership) {
+      return;
+    }
+
+    const remainingAmountCents = getMembershipRemainingAmountCents(membership);
+    if (remainingAmountCents <= 0) {
+      return;
+    }
+
+    await recordPayment(groupId, membershipId, remainingAmountCents);
+  }, [groups, recordPayment]);
+
+  const deletePayment = useCallback(async (paymentId: string) => {
+    const nextGroups = deletePaymentInGroups(groups, paymentId);
+
+    if (nextGroups === groups) {
+      return;
+    }
+
     await requestDeletePayment(paymentId);
-    setGroups((current) => deletePaymentInGroups(current, paymentId));
-  }, []);
+    setGroups(nextGroups);
+  }, [groups]);
 
-  const updatePaymentById = useCallback(async (paymentId: string, input: UpdatePaymentInput) => {
-    await requestUpdatePayment(paymentId, input.memberName, input.amountCents);
-    setGroups((current) => updatePaymentInGroups(current, paymentId, input));
-  }, []);
+  const editPayment = useCallback(async (paymentId: string, input: EditPaymentInput) => {
+    const nextGroups = editPaymentInGroups(groups, paymentId, input);
+
+    if (nextGroups === groups) {
+      return;
+    }
+
+    await requestEditPayment(paymentId, input.amountCents);
+    setGroups(nextGroups);
+  }, [groups]);
 
   const value = useMemo(
     () => ({
       groups,
-      addGroup,
+      createGroup,
       deleteGroup,
-      toggleMemberPaid,
-      addMemberToGroup,
-      addPayment,
-      deletePaymentById,
-      updatePaymentById,
+      addMembership,
+      recordPayment,
+      markMembershipAsPaid,
+      deletePayment,
+      editPayment,
     }),
-    [groups, addGroup, deleteGroup, toggleMemberPaid, addMemberToGroup, addPayment, deletePaymentById, updatePaymentById],
+    [groups, createGroup, deleteGroup, addMembership, recordPayment, markMembershipAsPaid, deletePayment, editPayment],
   );
 
   return <GroupContext.Provider value={value}>{children}</GroupContext.Provider>;

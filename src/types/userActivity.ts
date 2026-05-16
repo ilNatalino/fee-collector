@@ -5,8 +5,3 @@ export interface UserActivity {
   amount: number;
   date: string;
 }
-
-export type UpdateUserActivityInput = {
-  memberName: string;
-  amount: number;
-};
