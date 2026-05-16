@@ -1,6 +1,6 @@
 import { Group, Membership, Payment } from '@/src/types/group';
 
-import { getMembershipCollectedAmountCents, getMembershipRemainingAmountCents } from './membershipMetrics';
+import { projectMemberQuota } from './groupProjection';
 
 export type RecordPaymentInput = {
   groupId: string;
@@ -52,7 +52,12 @@ export function recordPaymentInGroups(groups: Group[], input: RecordPaymentInput
         return membership;
       }
 
-      const remainingAmountCents = getMembershipRemainingAmountCents(membership);
+      const memberQuotaProjection = projectMemberQuota(membership);
+      if (memberQuotaProjection.kind !== 'member-quota-projection') {
+        return membership;
+      }
+
+      const remainingAmountCents = memberQuotaProjection.remainingAmountCents;
       if (input.amountCents > remainingAmountCents) {
         return membership;
       }
@@ -87,7 +92,12 @@ export function markMembershipAsPaidInGroups(groups: Group[], input: MarkMembers
     return groups;
   }
 
-  const remainingAmountCents = getMembershipRemainingAmountCents(membership);
+  const memberQuotaProjection = projectMemberQuota(membership);
+  if (memberQuotaProjection.kind !== 'member-quota-projection') {
+    return groups;
+  }
+
+  const remainingAmountCents = memberQuotaProjection.remainingAmountCents;
   if (remainingAmountCents <= 0) {
     return groups;
   }
@@ -114,9 +124,13 @@ export function editPaymentInGroups(groups: Group[], paymentId: string, input: E
         return membership;
       }
 
+      const memberQuotaProjection = projectMemberQuota(membership);
+      if (memberQuotaProjection.kind !== 'member-quota-projection') {
+        return membership;
+      }
+
       const payment = membership.payments[paymentIndex];
-      const collectedWithoutPaymentCents = getMembershipCollectedAmountCents(membership) - payment.amountCents;
-      const maxEditableAmountCents = membership.quota.amountCents - collectedWithoutPaymentCents;
+      const maxEditableAmountCents = memberQuotaProjection.remainingAmountCents + payment.amountCents;
 
       if (input.amountCents > maxEditableAmountCents) {
         return membership;

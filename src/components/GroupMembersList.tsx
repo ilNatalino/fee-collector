@@ -5,7 +5,7 @@ import { ScrollView, Text, View } from 'react-native';
 
 import { AnimatedPressable } from '@/src/components/AnimatedPressable';
 import { Membership } from '@/src/types/group';
-import { getMembershipCollectedAmountCents, getMembershipQuotaStatus } from '@/src/utils/membershipMetrics';
+import { projectMemberQuota } from '@/src/utils/groupProjection';
 import { formatCents } from '@/src/utils/money';
 
 interface GroupMembersListProps {
@@ -27,8 +27,11 @@ export function GroupMembersList({ memberships }: GroupMembersListProps) {
       className="w-full"
     >
       {memberships.map((membership, index) => {
-        const collectedAmountCents = getMembershipCollectedAmountCents(membership);
-        const quotaStatus = getMembershipQuotaStatus(membership);
+        const memberQuotaProjection = projectMemberQuota(membership);
+        const collectedAmountCents =
+          memberQuotaProjection.kind === 'member-quota-projection' ? memberQuotaProjection.collectedAmountCents : 0;
+        const quotaStatus =
+          memberQuotaProjection.kind === 'member-quota-projection' ? memberQuotaProjection.quotaStatus : 'unpaid';
         const isPartial = quotaStatus === 'partial';
         const isFullyPaid = quotaStatus === 'paid';
 

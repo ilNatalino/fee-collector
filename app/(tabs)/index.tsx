@@ -8,16 +8,37 @@ import { GroupFormModal } from '@/src/components/GroupFormModal';
 import { Screen } from '@/src/components/Screen';
 import { useGroups } from '@/src/hooks/useGroups';
 import { useUserActivities } from '@/src/hooks/useUserActivities';
-import { getGroupProgress, getGroupsSummary } from '@/src/utils/groupMetrics';
+import { projectGroup, projectGroupCollection } from '@/src/utils/groupProjection';
 
 export default function HomeScreen() {
   const { groups, createGroup } = useGroups();
   const { activities } = useUserActivities();
-  const summary = getGroupsSummary(groups);
+  const groupCollectionProjection = projectGroupCollection(groups);
+  const summary =
+    groupCollectionProjection.kind === 'group-collection-projection'
+      ? {
+          totalGroups: groupCollectionProjection.totalGroupCount,
+          activeGroups: groupCollectionProjection.collectingGroupCount,
+          totalCollectedCents: groupCollectionProjection.totalCollectedAmountCents,
+          todayCollectedCents: 0,
+          totalPendingMemberships:
+            groupCollectionProjection.quotaBreakdown.unpaidMembershipCount +
+            groupCollectionProjection.quotaBreakdown.partialMembershipCount,
+        }
+      : {
+          totalGroups: groups.length,
+          activeGroups: 0,
+          totalCollectedCents: 0,
+          todayCollectedCents: 0,
+          totalPendingMemberships: 0,
+        };
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
 
-  const activeGroups = groups.filter((group) => getGroupProgress(group).progress < 100);
+  const activeGroups = groups.filter((group) => {
+    const groupProjection = projectGroup(group);
+    return groupProjection.kind === 'group-projection' && groupProjection.groupStatus === 'collecting';
+  });
 
   const filteredGroups = searchQuery.trim()
     ? activeGroups.filter((g) =>

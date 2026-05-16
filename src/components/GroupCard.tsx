@@ -5,7 +5,7 @@ import { useColorScheme } from 'nativewind';
 import { Text, View } from 'react-native';
 
 import { Group, GroupCategory } from '@/src/types/group';
-import { getGroupProgress } from '@/src/utils/groupMetrics';
+import { projectGroup } from '@/src/utils/groupProjection';
 import { formatCents } from '@/src/utils/money';
 
 import { AnimatedPressable } from './AnimatedPressable';
@@ -29,13 +29,20 @@ export function GroupCard({ group, delay = 0, variant = 'compact', ...props }: G
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === 'dark';
 
-  const progress = getGroupProgress(group);
+  const groupProjection = projectGroup(group);
   const createdDate = new Date(group.createdDate);
   const dateStr = group.dueDate
     ? `Due ${new Date(group.dueDate).getDate()} ${new Date(group.dueDate).toLocaleString('en', { month: 'short', year: 'numeric' })}`
     : `Created ${createdDate.getDate()} ${createdDate.toLocaleString('en', { month: 'short' })}`;
 
-  const percentComplete = progress.progress;
+  const percentComplete = groupProjection.kind === 'group-projection' ? groupProjection.groupProgressPercentage : 0;
+  const membershipCount = groupProjection.kind === 'group-projection' ? groupProjection.membershipCount : group.memberships.length;
+  const paidMembershipCount =
+    groupProjection.kind === 'group-projection' ? groupProjection.quotaBreakdown.paidMembershipCount : 0;
+  const collectedAmountCents =
+    groupProjection.kind === 'group-projection' ? groupProjection.collectedAmountCents : 0;
+  const remainingAmountCents =
+    groupProjection.kind === 'group-projection' ? groupProjection.remainingAmountCents : group.targetAmountCents;
 
   const isDetailed = variant === 'detailed';
   const IconComponent = group.category ? CATEGORY_ICONS[group.category] : null;
@@ -67,7 +74,7 @@ export function GroupCard({ group, delay = 0, variant = 'compact', ...props }: G
                 {group.name}
               </Text>
               <Text className="text-sm text-zinc-500 dark:text-zinc-400 mt-0.5">
-                {dateStr} · {progress.totalMemberships} members
+                {dateStr} · {membershipCount} members
               </Text>
             </View>
           </View>
@@ -94,7 +101,7 @@ export function GroupCard({ group, delay = 0, variant = 'compact', ...props }: G
             <View className="flex-row justify-between mb-5">
               <View className="flex-1 p-3 rounded-2xl bg-zinc-50 dark:bg-zinc-900 mx-1">
                 <Text className="text-xs text-zinc-500 dark:text-zinc-400">Collected</Text>
-                <Text className="text-lg font-bold text-zinc-900 dark:text-zinc-100 mb-0.5">€{formatCents(progress.collectedAmountCents)}</Text>
+                <Text className="text-lg font-bold text-zinc-900 dark:text-zinc-100 mb-0.5">€{formatCents(collectedAmountCents)}</Text>
               </View>
               <View className="flex-1 p-3 rounded-2xl bg-zinc-50 dark:bg-zinc-900 mx-1">
                 <Text className="text-xs text-zinc-500 dark:text-zinc-400">Target</Text>
@@ -102,12 +109,12 @@ export function GroupCard({ group, delay = 0, variant = 'compact', ...props }: G
               </View>
               <View className="flex-1 p-3 rounded-2xl bg-zinc-50 dark:bg-zinc-900 mx-1">
                 <Text className="text-xs text-zinc-500 dark:text-zinc-400">Remaining</Text>
-                <Text className="text-lg font-bold text-red-500 dark:text-red-400 mb-0.5">€{formatCents(progress.remainingAmountCents)}</Text>
+                <Text className="text-lg font-bold text-red-500 dark:text-red-400 mb-0.5">€{formatCents(remainingAmountCents)}</Text>
               </View>
             </View>
             <View className="flex-row justify-between items-end">
               <Text className="text-sm text-zinc-500 dark:text-zinc-400 leading-5">
-                {progress.paidMemberships} / {progress.totalMemberships}{'\n'}paid
+                {paidMembershipCount} / {membershipCount}{'\n'}paid
               </Text>
               <View className="bg-indigo-500/10 dark:bg-zinc-900 px-3 py-1.5 rounded-full">
                 <Text className="text-sm font-semibold text-indigo-500 dark:text-indigo-400">{percentComplete}% complete</Text>
@@ -119,12 +126,12 @@ export function GroupCard({ group, delay = 0, variant = 'compact', ...props }: G
             <View>
               <Text className="text-sm">
                 <Text className="font-bold text-indigo-500 dark:text-indigo-400">
-                  €{formatCents(progress.collectedAmountCents)}
+                  €{formatCents(collectedAmountCents)}
                 </Text>
                 <Text className="text-zinc-500 dark:text-zinc-400"> / €{formatCents(group.targetAmountCents)}</Text>
               </Text>
               <Text className="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">
-                {progress.paidMemberships} / {progress.totalMemberships} paid
+                {paidMembershipCount} / {membershipCount} paid
               </Text>
             </View>
             <View className="items-end">
@@ -132,7 +139,7 @@ export function GroupCard({ group, delay = 0, variant = 'compact', ...props }: G
                 Remaining
               </Text>
               <Text className="text-base font-bold text-red-500 dark:text-red-400">
-                €{formatCents(progress.remainingAmountCents)}
+                €{formatCents(remainingAmountCents)}
               </Text>
             </View>
           </View>

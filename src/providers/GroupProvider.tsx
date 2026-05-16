@@ -10,8 +10,7 @@ import {
 import { mockGroups } from '@/src/data/mockGroups';
 import { CreateGroupInput, Group } from '@/src/types/group';
 import { deletePaymentInGroups, editPaymentInGroups, EditPaymentInput, recordPaymentInGroups } from '@/src/utils/groupCommands';
-
-import { getMembershipRemainingAmountCents } from '../utils/membershipMetrics';
+import { projectMemberQuota } from '@/src/utils/groupProjection';
 
 type GroupContextValue = {
   groups: Group[];
@@ -115,7 +114,12 @@ export function GroupProvider({ children }: PropsWithChildren) {
       return;
     }
 
-    const remainingAmountCents = getMembershipRemainingAmountCents(membership);
+    const memberQuotaProjection = projectMemberQuota(membership);
+    if (memberQuotaProjection.kind !== 'member-quota-projection') {
+      return;
+    }
+
+    const remainingAmountCents = memberQuotaProjection.remainingAmountCents;
     if (remainingAmountCents <= 0) {
       return;
     }
