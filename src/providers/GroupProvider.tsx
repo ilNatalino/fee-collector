@@ -50,7 +50,13 @@ type GroupProviderProps = PropsWithChildren<{
   adapter?: GroupCollectionAdapter;
 }>;
 
-export function GroupProvider({ children, adapter = createAsyncStorageGroupCollectionAdapter() }: GroupProviderProps) {
+export function GroupProvider({ children, adapter }: GroupProviderProps) {
+  const defaultAdapterRef = useRef<GroupCollectionAdapter | null>(null);
+  if (!defaultAdapterRef.current) {
+    defaultAdapterRef.current = createAsyncStorageGroupCollectionAdapter();
+  }
+
+  const resolvedAdapter = adapter ?? defaultAdapterRef.current;
   const [state, setState] = useState(createInitialGroupCollectionState);
   const stateRef = useRef(state);
   const commandQueueRef = useRef<Promise<void>>(Promise.resolve());
@@ -69,7 +75,7 @@ export function GroupProvider({ children, adapter = createAsyncStorageGroupColle
 
     commitState(createInitialGroupCollectionState());
 
-    void hydrateGroupCollectionState(adapter, mockGroups).then((hydratedState) => {
+    void hydrateGroupCollectionState(resolvedAdapter, mockGroups).then((hydratedState) => {
       if (mounted) {
         commitState(hydratedState);
       }
@@ -78,7 +84,7 @@ export function GroupProvider({ children, adapter = createAsyncStorageGroupColle
     return () => {
       mounted = false;
     };
-  }, [adapter, commitState]);
+  }, [commitState, resolvedAdapter]);
 
   const runCommand = useCallback((prepare: (currentState: typeof state) => GroupCommandPreparation) => {
     const scheduledCommand = commandQueueRef.current.then(async () => {
@@ -90,7 +96,7 @@ export function GroupProvider({ children, adapter = createAsyncStorageGroupColle
 
       commitState(preparation.optimisticState);
 
-      const settlement = await settlePreparedGroupCommand(adapter, preparation);
+      const settlement = await settlePreparedGroupCommand(resolvedAdapter, preparation);
       commitState(settlement.state);
 
       return settlement.result;
@@ -99,7 +105,7 @@ export function GroupProvider({ children, adapter = createAsyncStorageGroupColle
     commandQueueRef.current = scheduledCommand.then(() => undefined, () => undefined);
 
     return scheduledCommand;
-  }, [adapter, commitState]);
+  }, [commitState, resolvedAdapter]);
 
   const createGroup = useCallback((input: CreateGroupInput) => {
     return runCommand((currentState) => prepareCreateGroupCommand(currentState, input));
