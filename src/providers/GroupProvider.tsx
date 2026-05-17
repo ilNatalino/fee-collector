@@ -1,108 +1,172 @@
-import { createContext, PropsWithChildren, useCallback, useContext, useMemo, useState } from 'react';
+import { createContext, PropsWithChildren, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 
-import {
-    requestCreateGroup,
-    requestDeleteGroup,
-    requestDeletePayment,
-    requestEditPayment,
-    requestRecordPayment,
-} from '@/src/data/groupApi';
 import { mockGroups } from '@/src/data/mockGroups';
-import { CreateGroupInput, Group } from '@/src/types/group';
 import {
-    createGroupInGroups,
-    deletePaymentInGroups,
-    editPaymentInGroups,
-    EditPaymentInput,
-    recordPaymentInGroups,
+  buildGroupCollectionView,
+  createInitialGroupCollectionState,
+  GroupCollectionAdapter,
+  GroupCollectionIssue,
+  GroupCollectionSyncStatus,
+  GroupCommandPreparation,
+  GroupCommandResult,
+  hydrateGroupCollectionState,
+  prepareCreateGroupCommand,
+  prepareDeleteGroupCommand,
+  prepareDeletePaymentCommand,
+  prepareEditPaymentCommand,
+  prepareRecordPaymentCommand,
+  selectGroupView,
+  settlePreparedGroupCommand,
+} from '@/src/modules/groupCollection';
+import { createAsyncStorageGroupCollectionAdapter } from '@/src/storage/groupCollectionStorage';
+import { CreateGroupInput } from '@/src/types/group';
+import {
+  EditPaymentInput,
 } from '@/src/utils/groupCommands';
+import { ActivityLogProjection } from '@/src/utils/activityLog';
+import { GroupCollectionProjection, GroupProjection } from '@/src/utils/groupProjection';
 
-type GroupContextValue = {
-  groups: Group[];
-  createGroup: (input: CreateGroupInput) => void;
-  deleteGroup: (groupId: string) => Promise<void>;
-  recordPayment: (groupId: string, membershipId: string, amountCents: number) => Promise<void>;
-  deletePayment: (paymentId: string) => Promise<void>;
-  editPayment: (paymentId: string, input: EditPaymentInput) => Promise<void>;
+export type GroupContextValue = {
+  groupCollectionProjection: GroupCollectionProjection | null;
+  activityLogProjection: ActivityLogProjection | null;
+  isHydrating: boolean;
+  syncStatus: GroupCollectionSyncStatus;
+  issues: GroupCollectionIssue[];
+  getGroupView: (groupId: string | undefined) => {
+    groupProjection: GroupProjection | null;
+    issues: GroupCollectionIssue[];
+    isMissing: boolean;
+  };
+  createGroup: (input: CreateGroupInput) => Promise<GroupCommandResult>;
+  deleteGroup: (groupId: string) => Promise<GroupCommandResult>;
+  recordPayment: (groupId: string, membershipId: string, amountCents: number) => Promise<GroupCommandResult>;
+  deletePayment: (paymentId: string) => Promise<GroupCommandResult>;
+  editPayment: (paymentId: string, input: EditPaymentInput) => Promise<GroupCommandResult>;
 };
 
 const GroupContext = createContext<GroupContextValue | undefined>(undefined);
 
-export function GroupProvider({ children }: PropsWithChildren) {
-  const [groups, setGroups] = useState<Group[]>(() => mockGroups);
+type GroupProviderProps = PropsWithChildren<{
+  adapter?: GroupCollectionAdapter;
+}>;
 
-  const createGroup = useCallback((input: CreateGroupInput) => {
-    const nextGroups = createGroupInGroups(groups, input);
+export function GroupProvider({ children, adapter = createAsyncStorageGroupCollectionAdapter() }: GroupProviderProps) {
+  const [state, setState] = useState(createInitialGroupCollectionState);
+  const stateRef = useRef(state);
+  const commandQueueRef = useRef<Promise<void>>(Promise.resolve());
 
-    if (nextGroups === groups) {
-      return;
-    }
-
-    void requestCreateGroup(input);
-    setGroups(nextGroups);
-  }, [groups]);
-
-  const deleteGroup = useCallback(async (groupId: string) => {
-    await requestDeleteGroup(groupId);
-    setGroups((current) => current.filter((g) => g.id !== groupId));
+  const commitState = useCallback((nextState: ReturnType<typeof createInitialGroupCollectionState>) => {
+    stateRef.current = nextState;
+    setState(nextState);
   }, []);
 
-  const recordPayment = useCallback(async (groupId: string, membershipId: string, amountCents: number) => {
-    const nextGroups = recordPaymentInGroups(groups, {
+  useEffect(() => {
+    stateRef.current = state;
+  }, [state]);
+
+  useEffect(() => {
+    let mounted = true;
+
+    commitState(createInitialGroupCollectionState());
+
+    void hydrateGroupCollectionState(adapter, mockGroups).then((hydratedState) => {
+      if (mounted) {
+        commitState(hydratedState);
+      }
+    });
+
+    return () => {
+      mounted = false;
+    };
+  }, [adapter, commitState]);
+
+  const runCommand = useCallback((prepare: (currentState: typeof state) => GroupCommandPreparation) => {
+    const scheduledCommand = commandQueueRef.current.then(async () => {
+      const preparation = prepare(stateRef.current);
+
+      if (preparation.kind === 'rejected-group-command') {
+        return preparation.result;
+      }
+
+      commitState(preparation.optimisticState);
+
+      const settlement = await settlePreparedGroupCommand(adapter, preparation);
+      commitState(settlement.state);
+
+      return settlement.result;
+    });
+
+    commandQueueRef.current = scheduledCommand.then(() => undefined, () => undefined);
+
+    return scheduledCommand;
+  }, [adapter, commitState]);
+
+  const createGroup = useCallback((input: CreateGroupInput) => {
+    return runCommand((currentState) => prepareCreateGroupCommand(currentState, input));
+  }, [runCommand]);
+
+  const deleteGroup = useCallback((groupId: string) => {
+    return runCommand((currentState) => prepareDeleteGroupCommand(currentState, groupId));
+  }, [runCommand]);
+
+  const recordPayment = useCallback((groupId: string, membershipId: string, amountCents: number) => {
+    return runCommand((currentState) => prepareRecordPaymentCommand(currentState, {
       groupId,
       membershipId,
       amountCents,
-    });
+    }));
+  }, [runCommand]);
 
-    if (nextGroups === groups) {
-      return;
-    }
+  const deletePayment = useCallback((paymentId: string) => {
+    return runCommand((currentState) => prepareDeletePaymentCommand(currentState, paymentId));
+  }, [runCommand]);
 
-    setGroups(nextGroups);
-    await requestRecordPayment(groupId, membershipId, amountCents);
-  }, [groups]);
+  const editPayment = useCallback((paymentId: string, input: EditPaymentInput) => {
+    return runCommand((currentState) => prepareEditPaymentCommand(currentState, paymentId, input));
+  }, [runCommand]);
 
-  const deletePayment = useCallback(async (paymentId: string) => {
-    const nextGroups = deletePaymentInGroups(groups, paymentId);
+  const view = useMemo(() => buildGroupCollectionView(state), [state]);
 
-    if (nextGroups === groups) {
-      return;
-    }
-
-    await requestDeletePayment(paymentId);
-    setGroups(nextGroups);
-  }, [groups]);
-
-  const editPayment = useCallback(async (paymentId: string, input: EditPaymentInput) => {
-    const nextGroups = editPaymentInGroups(groups, paymentId, input);
-
-    if (nextGroups === groups) {
-      return;
-    }
-
-    await requestEditPayment(paymentId, input.amountCents);
-    setGroups(nextGroups);
-  }, [groups]);
+  const getGroupView = useCallback((groupId: string | undefined) => {
+    return selectGroupView(stateRef.current, groupId);
+  }, []);
 
   const value = useMemo(
     () => ({
-      groups,
+      groupCollectionProjection: view.groupCollectionProjection,
+      activityLogProjection: view.activityLogProjection,
+      isHydrating: view.isHydrating,
+      syncStatus: view.syncStatus,
+      issues: view.issues,
+      getGroupView,
       createGroup,
       deleteGroup,
       recordPayment,
       deletePayment,
       editPayment,
     }),
-    [groups, createGroup, deleteGroup, recordPayment, deletePayment, editPayment],
+    [
+      view.groupCollectionProjection,
+      view.activityLogProjection,
+      view.isHydrating,
+      view.syncStatus,
+      view.issues,
+      getGroupView,
+      createGroup,
+      deleteGroup,
+      recordPayment,
+      deletePayment,
+      editPayment,
+    ],
   );
 
   return <GroupContext.Provider value={value}>{children}</GroupContext.Provider>;
 }
 
-export function useGroupContext(): GroupContextValue {
+export function useGroupCollection(): GroupContextValue {
   const context = useContext(GroupContext);
   if (!context) {
-    throw new Error('useGroupContext must be used inside GroupProvider');
+    throw new Error('useGroupCollection must be used inside GroupProvider');
   }
   return context;
 }

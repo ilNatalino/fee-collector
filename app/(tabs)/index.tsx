@@ -5,15 +5,23 @@ import { AnimatedPressable } from '@/src/components/AnimatedPressable';
 import { GroupCard } from '@/src/components/GroupCard';
 import { GroupFormModal } from '@/src/components/GroupFormModal';
 import { Screen } from '@/src/components/Screen';
-import { useGroupCommands } from '@/src/hooks/useGroupCommands';
-import { useGroupCollectionProjection } from '@/src/hooks/useGroupProjections';
+import { useGroupCollection } from '@/src/hooks/useGroupCollection';
 import { useState } from 'react';
 
 export default function HomeScreen() {
-  const { createGroup } = useGroupCommands();
-  const { groupCollectionProjection } = useGroupCollectionProjection();
+  const { createGroup, groupCollectionProjection, isHydrating } = useGroupCollection();
   const [isModalVisible, setIsModalVisible] = useState(false);
   const searchQuery = '';
+
+  if (isHydrating || !groupCollectionProjection) {
+    return (
+      <Screen>
+        <View className="flex-1 items-center justify-center">
+          <Text className="text-sm text-zinc-500 dark:text-zinc-400">Loading groups...</Text>
+        </View>
+      </Screen>
+    );
+  }
 
   const activeGroups = groupCollectionProjection?.groupProjections.filter(
     (groupProjection) => groupProjection.groupStatus === 'collecting',

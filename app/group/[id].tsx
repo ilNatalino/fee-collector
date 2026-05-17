@@ -9,19 +9,36 @@ import { AddPaymentModal } from '@/src/components/AddPaymentModal';
 import { AnimatedPressable } from '@/src/components/AnimatedPressable';
 import { GroupCard } from '@/src/components/GroupCard';
 import { GroupMembersList } from '@/src/components/GroupMembersList';
-import { useGroupCommands } from '@/src/hooks/useGroupCommands';
-import { useGroupProjection, useMemberQuotaProjections } from '@/src/hooks/useGroupProjections';
+import { useGroupCollection } from '@/src/hooks/useGroupCollection';
 
 export default function GroupDetailsScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === 'dark';
-  const { recordPayment } = useGroupCommands();
-  const { groupProjection, issues, isMissing } = useGroupProjection(id);
-  const { memberQuotaProjections } = useMemberQuotaProjections(groupProjection);
+  const { recordPayment, getGroupView, isHydrating } = useGroupCollection();
+  const { groupProjection, issues, isMissing } = getGroupView(id);
+  const memberQuotaProjections = groupProjection?.memberQuotaProjections ?? [];
   
   const [isPaymentModalVisible, setIsPaymentModalVisible] = useState(false);
+
+  if (isHydrating) {
+    return (
+      <View className="flex-1 bg-zinc-100 dark:bg-zinc-950">
+        <SafeAreaView>
+          <View className="flex-row items-center justify-between px-5 pt-3 pb-4">
+            <Pressable onPress={() => router.back()} className="w-10 h-10 justify-center items-center">
+              <ChevronLeft size={24} color={isDark ? '#f4f4f5' : '#18181b'} />
+            </Pressable>
+            <Text className="text-lg font-semibold flex-1 text-center text-zinc-900 dark:text-zinc-100">
+              Loading Group
+            </Text>
+            <View className="w-10" />
+          </View>
+        </SafeAreaView>
+      </View>
+    );
+  }
 
   if (!groupProjection) {
     const title = isMissing || issues.length === 0 ? 'Group Not Found' : 'Group Unavailable';

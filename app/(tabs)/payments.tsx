@@ -1,19 +1,26 @@
 import { useState } from 'react';
+import { Text } from 'react-native';
 
 import { DeleteConfirmationModal } from '@/src/components/DeleteConfirmationModal';
 import { QuotaFormModal } from '@/src/components/QuotaFormModal';
 import { Screen } from '@/src/components/Screen';
 import { SwipeableList } from '@/src/components/SwipeableList';
 import { UserActivityItem } from '@/src/components/UserActivityItem';
-import { useActivityLogProjection } from '@/src/hooks/useActivityLogProjection';
-import { useGroupCommands } from '@/src/hooks/useGroupCommands';
+import { useGroupCollection } from '@/src/hooks/useGroupCollection';
 import { PaymentProjection } from '@/src/utils/activityLog';
 
 export default function PaymentsScreen() {
-  const { activityLogProjection } = useActivityLogProjection();
-  const { deletePayment, editPayment } = useGroupCommands();
+  const { activityLogProjection, deletePayment, editPayment, isHydrating } = useGroupCollection();
   const [paymentToDelete, setPaymentToDelete] = useState<PaymentProjection | null>(null);
   const [paymentToEdit, setPaymentToEdit] = useState<PaymentProjection | null>(null);
+
+  if (isHydrating || !activityLogProjection) {
+    return (
+      <Screen>
+        <Text className="text-center text-sm py-5 text-zinc-500 dark:text-zinc-400">Loading payments...</Text>
+      </Screen>
+    );
+  }
 
   const closeDeleteModal = () => setPaymentToDelete(null);
   const closeEditModal = () => setPaymentToEdit(null);
