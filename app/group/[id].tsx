@@ -9,20 +9,23 @@ import { AddPaymentModal } from '@/src/components/AddPaymentModal';
 import { AnimatedPressable } from '@/src/components/AnimatedPressable';
 import { GroupCard } from '@/src/components/GroupCard';
 import { GroupMembersList } from '@/src/components/GroupMembersList';
-import { useGroups } from '@/src/hooks/useGroups';
+import { useGroupCommands } from '@/src/hooks/useGroupCommands';
+import { useGroupProjection, useMemberQuotaProjections } from '@/src/hooks/useGroupProjections';
 
 export default function GroupDetailsScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === 'dark';
-  const { groups, recordPayment } = useGroups();
+  const { recordPayment } = useGroupCommands();
+  const { groupProjection, issues, isMissing } = useGroupProjection(id);
+  const { memberQuotaProjections } = useMemberQuotaProjections(groupProjection);
   
   const [isPaymentModalVisible, setIsPaymentModalVisible] = useState(false);
 
-  const group = groups.find((g) => g.id === id);
+  if (!groupProjection) {
+    const title = isMissing || issues.length === 0 ? 'Group Not Found' : 'Group Unavailable';
 
-  if (!group) {
     return (
       <View className="flex-1 bg-zinc-100 dark:bg-zinc-950">
         <SafeAreaView>
@@ -31,7 +34,7 @@ export default function GroupDetailsScreen() {
               <ChevronLeft size={24} color={isDark ? '#f4f4f5' : '#18181b'} />
             </Pressable>
             <Text className="text-lg font-semibold flex-1 text-center text-zinc-900 dark:text-zinc-100">
-              Group Not Found
+              {title}
             </Text>
             <View className="w-10" />
           </View>
@@ -41,6 +44,7 @@ export default function GroupDetailsScreen() {
   }
 
   const iconColor = isDark ? '#f4f4f5' : '#18181b';
+  const payableMembers = memberQuotaProjections.filter((memberQuotaProjection) => memberQuotaProjection.remainingAmountCents > 0);
 
   return (
     <View className="flex-1 bg-zinc-100 dark:bg-zinc-950">
@@ -54,7 +58,7 @@ export default function GroupDetailsScreen() {
             <ChevronLeft size={24} color={iconColor} />
           </AnimatedPressable>
           <Text className="text-lg font-semibold flex-1 text-center text-zinc-900 dark:text-zinc-100" numberOfLines={1}>
-            {group.name}
+            {groupProjection.groupName}
           </Text>
           <AnimatedPressable className="w-10 h-10 rounded-xl items-center justify-center shadow-sm shadow-zinc-950/5 dark:ring-white/10 bg-white dark:bg-zinc-900">
             <EllipsisVertical size={20} color={iconColor} />
@@ -63,7 +67,7 @@ export default function GroupDetailsScreen() {
 
         <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 20 }}>
           {/* Main Info Card */}
-          <GroupCard group={group} variant="detailed" />
+          <GroupCard group={groupProjection} variant="detailed" />
 
           {/* Actions */}
           <View className="flex-row mb-8 gap-x-3">
@@ -72,7 +76,8 @@ export default function GroupDetailsScreen() {
               <Text className="text-[15px] font-semibold text-zinc-500 dark:text-zinc-400">Send reminder</Text>
             </AnimatedPressable>
             <AnimatedPressable 
-              className="flex-1 h-[50px] rounded-2xl flex-row items-center justify-center bg-white dark:bg-zinc-900 shadow-sm shadow-zinc-950/5 dark:ring-white/10"
+              className={`flex-1 h-[50px] rounded-2xl flex-row items-center justify-center bg-white dark:bg-zinc-900 shadow-sm shadow-zinc-950/5 dark:ring-white/10 ${payableMembers.length === 0 ? 'opacity-50' : ''}`}
+              disabled={payableMembers.length === 0}
               onPress={() => setIsPaymentModalVisible(true)}
             >
               <Plus size={16} color={iconColor} style={{ marginRight: 6 }} />
@@ -88,7 +93,7 @@ export default function GroupDetailsScreen() {
             </AnimatedPressable>
           </View>
 
-          <GroupMembersList memberships={group.memberships} />
+          <GroupMembersList memberQuotaProjections={memberQuotaProjections} />
 
           {/* Payment History */}
           {/* <View className="flex-row justify-between items-center mb-4 mt-6">
@@ -110,10 +115,10 @@ export default function GroupDetailsScreen() {
 
       <AddPaymentModal
         visible={isPaymentModalVisible}
-        memberships={group.memberships}
+        members={payableMembers}
         onCancel={() => setIsPaymentModalVisible(false)}
         onSubmit={(membershipId, amountCents) => {
-          void recordPayment(group.id, membershipId, amountCents);
+          void recordPayment(groupProjection.groupId, membershipId, amountCents);
           setIsPaymentModalVisible(false);
         }}
       />

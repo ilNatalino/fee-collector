@@ -1,11 +1,17 @@
-import { getUserActivitiesFromGroups } from '../utils/groupPayments';
-import { useGroups } from './useGroups';
+import { centsToEuros } from '../utils/money';
+import { useActivityLogProjection } from './useActivityLogProjection';
 
 export function useUserActivities() {
-  const { groups } = useGroups();
+  const { activityLogProjection, isLoading } = useActivityLogProjection();
 
   return {
-    activities: getUserActivitiesFromGroups(groups),
-    isLoading: false,
+    activities: activityLogProjection.payments.map((payment) => ({
+      id: payment.paymentId,
+      memberName: payment.recordedMemberName,
+      groupName: payment.recordedGroupName,
+      amount: centsToEuros(payment.amountCents),
+      date: payment.recordedAt,
+    })),
+    isLoading,
   };
 }

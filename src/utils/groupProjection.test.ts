@@ -70,6 +70,11 @@ describe('group projection', () => {
   it('projects group status, progress, due state, amounts, and quota breakdown', () => {
     const projection = expectGroupProjection(projectGroup(findGroup('g4'), { now: new Date('2026-03-15T12:00:00.000Z') }));
 
+    expect(projection.groupName).toBe('Viaggio Sardegna');
+    expect(projection.groupCategory).toBe('travel');
+    expect(projection.groupEmoji).toBe('✈️');
+    expect(projection.createdDate).toBe('2026-03-01T10:00:00.000Z');
+    expect(projection.dueDate).toBeUndefined();
     expect(projection.groupStatus).toBe('collecting');
     expect(projection.groupProgressPercentage).toBe(75);
     expect(projection.dueState).toBe('no-deadline');

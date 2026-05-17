@@ -4,15 +4,14 @@ import { useColorScheme } from 'nativewind';
 import { ScrollView, Text, View } from 'react-native';
 
 import { AnimatedPressable } from '@/src/components/AnimatedPressable';
-import { Membership } from '@/src/types/group';
-import { projectMemberQuota } from '@/src/utils/groupProjection';
+import { MemberQuotaProjection } from '@/src/utils/groupProjection';
 import { formatCents } from '@/src/utils/money';
 
 interface GroupMembersListProps {
-  memberships: Membership[];
+  memberQuotaProjections: MemberQuotaProjection[];
 }
 
-export function GroupMembersList({ memberships }: GroupMembersListProps) {
+export function GroupMembersList({ memberQuotaProjections }: GroupMembersListProps) {
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === 'dark';
 
@@ -26,18 +25,15 @@ export function GroupMembersList({ memberships }: GroupMembersListProps) {
       contentContainerStyle={{ paddingBottom: 24 }}
       className="w-full"
     >
-      {memberships.map((membership, index) => {
-        const memberQuotaProjection = projectMemberQuota(membership);
-        const collectedAmountCents =
-          memberQuotaProjection.kind === 'member-quota-projection' ? memberQuotaProjection.collectedAmountCents : 0;
-        const quotaStatus =
-          memberQuotaProjection.kind === 'member-quota-projection' ? memberQuotaProjection.quotaStatus : 'unpaid';
+      {memberQuotaProjections.map((memberQuotaProjection, index) => {
+        const collectedAmountCents = memberQuotaProjection.collectedAmountCents;
+        const quotaStatus = memberQuotaProjection.quotaStatus;
         const isPartial = quotaStatus === 'partial';
         const isFullyPaid = quotaStatus === 'paid';
 
         return (
           <MotiView
-            key={membership.id}
+            key={memberQuotaProjection.membershipId}
             from={{ opacity: 0, translateY: 20 }}
             animate={{ opacity: 1, translateY: 0 }}
             transition={{ type: 'spring', damping: 20, stiffness: 90, delay: index * 50 }}
@@ -55,7 +51,7 @@ export function GroupMembersList({ memberships }: GroupMembersListProps) {
                     isPartial ? 'text-amber-700 dark:text-amber-400' :
                     'text-zinc-900 dark:text-zinc-100'
                   }`}>
-                    {getInitials(membership.member.fullName)}
+                    {getInitials(memberQuotaProjection.memberFullName)}
                   </Text>
                 </View>
                 
@@ -74,7 +70,7 @@ export function GroupMembersList({ memberships }: GroupMembersListProps) {
               
               <View className="flex-1 justify-center">
                 <Text className="text-[15px] font-semibold text-zinc-900 dark:text-zinc-100" numberOfLines={1}>
-                  {membership.member.fullName}
+                  {memberQuotaProjection.memberFullName}
                 </Text>
                 <Text className="text-xs font-medium text-zinc-500 dark:text-zinc-400 mt-0.5" numberOfLines={1}>
                   {isFullyPaid ? 'Paid in full' : isPartial ? 'Partially paid' : ''}
@@ -87,7 +83,7 @@ export function GroupMembersList({ memberships }: GroupMembersListProps) {
                   isPartial ? 'text-amber-600 dark:text-amber-400' :
                   'text-zinc-900 dark:text-zinc-100'
                 }`}>
-                  €{formatCents(membership.quota.amountCents)}
+                  €{formatCents(memberQuotaProjection.quotaAmountCents)}
                 </Text>
                 {isPartial && (
                   <Text className="text-[10px] font-medium text-zinc-500 dark:text-zinc-400 mt-0.5">

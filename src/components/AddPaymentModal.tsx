@@ -3,28 +3,30 @@ import { MotiView } from 'moti';
 import { useColorScheme } from 'nativewind';
 import { useEffect, useState } from 'react';
 import {
-  Keyboard,
-  KeyboardAvoidingView,
-  Modal,
-  Platform,
-  Pressable,
-  Text,
-  TextInput,
-  TouchableWithoutFeedback,
-  View,
+    Keyboard,
+    KeyboardAvoidingView,
+    Modal,
+    Platform,
+    Pressable,
+    Text,
+    TextInput,
+    TouchableWithoutFeedback,
+    View,
 } from 'react-native';
 
-import { Membership } from '@/src/types/group';
+import { MemberQuotaProjection } from '@/src/utils/groupProjection';
 import { parseEuroInputToCents } from '@/src/utils/money';
+
+type AddPaymentMemberOption = Pick<MemberQuotaProjection, 'membershipId' | 'memberFullName'>;
 
 type AddPaymentModalProps = Readonly<{
   visible: boolean;
-  memberships: Membership[];
+  members: AddPaymentMemberOption[];
   onCancel: () => void;
   onSubmit: (membershipId: string, amountCents: number) => void;
 }>;
 
-export function AddPaymentModal({ visible, memberships, onCancel, onSubmit }: AddPaymentModalProps) {
+export function AddPaymentModal({ visible, members, onCancel, onSubmit }: AddPaymentModalProps) {
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === 'dark';
 
@@ -38,15 +40,15 @@ export function AddPaymentModal({ visible, memberships, onCancel, onSubmit }: Ad
       return;
     }
 
-    if (memberships.length > 0) {
-      setSelectedMembershipId(memberships[0].id);
+    if (members.length > 0) {
+      setSelectedMembershipId(members[0].membershipId);
     } else {
       setSelectedMembershipId('');
     }
     setAmountInput('');
     setAmountError(null);
     setMemberError(null);
-  }, [visible, memberships]);
+  }, [visible, members]);
 
   const handleSave = () => {
     let hasError = false;
@@ -99,11 +101,11 @@ export function AddPaymentModal({ visible, memberships, onCancel, onSubmit }: Ad
                 prompt="Select a member"
               >
                 <Picker.Item label="Select a member..." value="" color={isDark ? '#a1a1aa' : '#71717a'} />
-                {memberships.map((membership) => (
+                {members.map((member) => (
                   <Picker.Item
-                    key={membership.id}
-                    label={membership.member.fullName}
-                    value={membership.id}
+                    key={member.membershipId}
+                    label={member.memberFullName}
+                    value={member.membershipId}
                     color={isDark ? '#f4f4f5' : '#18181b'}
                   />
                 ))}

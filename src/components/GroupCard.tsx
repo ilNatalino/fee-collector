@@ -4,8 +4,8 @@ import { MotiView } from 'moti';
 import { useColorScheme } from 'nativewind';
 import { Text, View } from 'react-native';
 
-import { Group, GroupCategory } from '@/src/types/group';
-import { projectGroup } from '@/src/utils/groupProjection';
+import { GroupCategory } from '@/src/types/group';
+import { GroupProjection } from '@/src/utils/groupProjection';
 import { formatCents } from '@/src/utils/money';
 
 import { AnimatedPressable } from './AnimatedPressable';
@@ -18,7 +18,7 @@ const CATEGORY_ICONS: Record<GroupCategory, any> = {
 };
 
 type GroupCardProps = {
-  group: Group;
+  group: GroupProjection;
   delay?: number;
   variant?: 'compact' | 'detailed';
   onPress?: () => void;
@@ -29,23 +29,19 @@ export function GroupCard({ group, delay = 0, variant = 'compact', ...props }: G
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === 'dark';
 
-  const groupProjection = projectGroup(group);
   const createdDate = new Date(group.createdDate);
   const dateStr = group.dueDate
     ? `Due ${new Date(group.dueDate).getDate()} ${new Date(group.dueDate).toLocaleString('en', { month: 'short', year: 'numeric' })}`
     : `Created ${createdDate.getDate()} ${createdDate.toLocaleString('en', { month: 'short' })}`;
 
-  const percentComplete = groupProjection.kind === 'group-projection' ? groupProjection.groupProgressPercentage : 0;
-  const membershipCount = groupProjection.kind === 'group-projection' ? groupProjection.membershipCount : group.memberships.length;
-  const paidMembershipCount =
-    groupProjection.kind === 'group-projection' ? groupProjection.quotaBreakdown.paidMembershipCount : 0;
-  const collectedAmountCents =
-    groupProjection.kind === 'group-projection' ? groupProjection.collectedAmountCents : 0;
-  const remainingAmountCents =
-    groupProjection.kind === 'group-projection' ? groupProjection.remainingAmountCents : group.targetAmountCents;
+  const percentComplete = group.groupProgressPercentage;
+  const membershipCount = group.membershipCount;
+  const paidMembershipCount = group.quotaBreakdown.paidMembershipCount;
+  const collectedAmountCents = group.collectedAmountCents;
+  const remainingAmountCents = group.remainingAmountCents;
 
   const isDetailed = variant === 'detailed';
-  const IconComponent = group.category ? CATEGORY_ICONS[group.category] : null;
+  const IconComponent = group.groupCategory ? CATEGORY_ICONS[group.groupCategory] : null;
   const iconColor = isDark ? '#818cf8' : '#6366f1';
 
   return (
@@ -55,7 +51,7 @@ export function GroupCard({ group, delay = 0, variant = 'compact', ...props }: G
       transition={{ type: 'timing', duration: isDetailed ? 400 : 500, delay }}
     >
       <AnimatedPressable
-        onPress={props.onPress || (!isDetailed ? () => router.push(`/group/${group.id}`) : undefined)}
+        onPress={props.onPress || (!isDetailed ? () => router.push(`/group/${group.groupId}`) : undefined)}
         disabled={isDetailed && !props.onPress}
         className={`rounded-4xl bg-white dark:bg-zinc-900 shadow-md shadow-zinc-950/5 ${isDetailed ? 'p-6 mb-6' : 'p-5 mb-3'}`}
       >
@@ -66,12 +62,12 @@ export function GroupCard({ group, delay = 0, variant = 'compact', ...props }: G
               {IconComponent ? (
                 <IconComponent size={isDetailed ? 26 : 20} color={iconColor} strokeWidth={isDetailed ? 2.5 : 2} />
               ) : (
-                <Text className={isDetailed ? 'text-2xl' : 'text-xl'}>{group.emoji}</Text>
+                <Text className={isDetailed ? 'text-2xl' : 'text-xl'}>{group.groupEmoji}</Text>
               )}
             </View>
             <View>
               <Text className={`${isDetailed ? 'text-xl font-bold' : 'text-base font-semibold'} text-zinc-900 dark:text-zinc-100`}>
-                {group.name}
+                {group.groupName}
               </Text>
               <Text className="text-sm text-zinc-500 dark:text-zinc-400 mt-0.5">
                 {dateStr} · {membershipCount} members

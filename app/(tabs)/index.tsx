@@ -1,53 +1,32 @@
 import { Plus } from 'lucide-react-native';
-import { useState } from 'react';
 import { ScrollView, Text, View } from 'react-native';
 
 import { AnimatedPressable } from '@/src/components/AnimatedPressable';
 import { GroupCard } from '@/src/components/GroupCard';
 import { GroupFormModal } from '@/src/components/GroupFormModal';
 import { Screen } from '@/src/components/Screen';
-import { useGroups } from '@/src/hooks/useGroups';
-import { useUserActivities } from '@/src/hooks/useUserActivities';
-import { projectGroup, projectGroupCollection } from '@/src/utils/groupProjection';
+import { useGroupCommands } from '@/src/hooks/useGroupCommands';
+import { useGroupCollectionProjection } from '@/src/hooks/useGroupProjections';
+import { useState } from 'react';
 
 export default function HomeScreen() {
-  const { groups, createGroup } = useGroups();
-  const { activities } = useUserActivities();
-  const groupCollectionProjection = projectGroupCollection(groups);
-  const summary =
-    groupCollectionProjection.kind === 'group-collection-projection'
-      ? {
-          totalGroups: groupCollectionProjection.totalGroupCount,
-          activeGroups: groupCollectionProjection.collectingGroupCount,
-          totalCollectedCents: groupCollectionProjection.totalCollectedAmountCents,
-          todayCollectedCents: 0,
-          totalPendingMemberships:
-            groupCollectionProjection.quotaBreakdown.unpaidMembershipCount +
-            groupCollectionProjection.quotaBreakdown.partialMembershipCount,
-        }
-      : {
-          totalGroups: groups.length,
-          activeGroups: 0,
-          totalCollectedCents: 0,
-          todayCollectedCents: 0,
-          totalPendingMemberships: 0,
-        };
+  const { createGroup } = useGroupCommands();
+  const { groupCollectionProjection } = useGroupCollectionProjection();
   const [isModalVisible, setIsModalVisible] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
+  const searchQuery = '';
 
-  const activeGroups = groups.filter((group) => {
-    const groupProjection = projectGroup(group);
-    return groupProjection.kind === 'group-projection' && groupProjection.groupStatus === 'collecting';
-  });
+  const activeGroups = groupCollectionProjection?.groupProjections.filter(
+    (groupProjection) => groupProjection.groupStatus === 'collecting',
+  ) ?? [];
 
   const filteredGroups = searchQuery.trim()
-    ? activeGroups.filter((g) =>
-        g.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        g.memberships.some((membership) => membership.member.fullName.toLowerCase().includes(searchQuery.toLowerCase())),
+    ? activeGroups.filter((groupProjection) =>
+        groupProjection.groupName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        groupProjection.memberQuotaProjections.some((memberQuotaProjection) =>
+          memberQuotaProjection.memberFullName.toLowerCase().includes(searchQuery.toLowerCase()),
+        ),
       )
     : activeGroups;
-
-  const recentActivities = activities.slice(0, 5);
 
   return (
     <Screen>
@@ -86,7 +65,7 @@ export default function HomeScreen() {
         </View>
 
         {filteredGroups.map((group, index) => (
-          <GroupCard key={group.id} group={group} delay={index * 60} />
+          <GroupCard key={group.groupId} group={group} delay={index * 60} />
         ))}
 
         {filteredGroups.length === 0 && (

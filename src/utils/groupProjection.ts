@@ -1,4 +1,4 @@
-import { Group, Membership, MoneyCents } from '@/src/types/group';
+import { Group, GroupCategory, Membership, MoneyCents } from '@/src/types/group';
 
 export type GroupStatus = 'collecting' | 'completed';
 export type DueState = 'not-applicable' | 'no-deadline' | 'upcoming' | 'overdue';
@@ -49,6 +49,10 @@ export interface GroupProjection {
   kind: 'group-projection';
   groupId: string;
   groupName: string;
+  groupCategory?: GroupCategory;
+  groupEmoji?: string;
+  createdDate: string;
+  dueDate?: string;
   targetAmountCents: MoneyCents;
   membershipCount: number;
   groupStatus: GroupStatus;
@@ -346,6 +350,10 @@ export function projectGroup(group: Group, options: ProjectionOptions = {}): Gro
     kind: 'group-projection',
     groupId: group.id,
     groupName: group.name,
+    groupCategory: group.category,
+    groupEmoji: group.emoji,
+    createdDate: group.createdDate,
+    dueDate: group.dueDate,
     targetAmountCents: group.targetAmountCents,
     membershipCount: group.memberships.length,
     groupStatus,
