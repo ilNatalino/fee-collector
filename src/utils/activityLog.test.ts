@@ -136,6 +136,56 @@ describe('activity log projection', () => {
     expect(paymentProjection?.recordedMemberName).not.toBe(renamedGroup!.memberships[2].member.fullName);
   });
 
+  it('projects the current editable cap for each payment from the remaining quota', () => {
+    const groups: Group[] = [
+      {
+        id: 'g-cap',
+        name: 'Editable Cap Group',
+        createdDate: '2026-03-01T08:00:00.000Z',
+        targetAmountCents: 10000,
+        memberships: [
+          {
+            id: 'm-cap',
+            joinedAt: '2026-03-01T08:00:00.000Z',
+            member: {
+              id: 'member-cap',
+              fullName: 'Cap Member',
+              createdAt: '2026-03-01T08:00:00.000Z',
+            },
+            quota: {
+              amountCents: 10000,
+            },
+            payments: [
+              {
+                id: 'payment-a',
+                membershipId: 'm-cap',
+                amountCents: 3000,
+                recordedAt: '2026-03-01T08:00:00.000Z',
+                recordedMemberName: 'Cap Member',
+                recordedGroupName: 'Editable Cap Group',
+              },
+              {
+                id: 'payment-b',
+                membershipId: 'm-cap',
+                amountCents: 2000,
+                recordedAt: '2026-03-02T08:00:00.000Z',
+                recordedMemberName: 'Cap Member',
+                recordedGroupName: 'Editable Cap Group',
+              },
+            ],
+          },
+        ],
+      },
+    ];
+
+    const projection = projectActivityLog(groups);
+    const firstPayment = projection.payments.find((payment) => payment.paymentId === 'payment-a');
+    const secondPayment = projection.payments.find((payment) => payment.paymentId === 'payment-b');
+
+    expect(firstPayment?.maxEditableAmountCents).toBe(8000);
+    expect(secondPayment?.maxEditableAmountCents).toBe(7000);
+  });
+
   it('removes deleted payments from the current activity log', () => {
     const groupsWithoutPayment = deletePaymentInGroups(mockGroups, 'p-g4-v3');
     const projection = projectActivityLog(groupsWithoutPayment);

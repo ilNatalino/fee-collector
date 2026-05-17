@@ -10,6 +10,7 @@ export interface PaymentProjection {
   recordedMemberName: string;
   amountCents: MoneyCents;
   recordedAt: string;
+  maxEditableAmountCents: MoneyCents;
 }
 
 export interface ActivityLogProjection {
@@ -35,8 +36,13 @@ function comparePaymentsByRecordedAt(left: PaymentProjection, right: PaymentProj
 export function projectActivityLog(groups: Group[]): ActivityLogProjection {
   const payments = groups
     .flatMap((group) =>
-      group.memberships.flatMap((membership) =>
-        membership.payments.map((payment) => ({
+      group.memberships.flatMap((membership) => {
+        const collectedAmountCents = membership.payments.reduce(
+          (sum, payment) => sum + payment.amountCents,
+          0,
+        );
+
+        return membership.payments.map((payment) => ({
           kind: 'payment-projection' as const,
           paymentId: payment.id,
           groupId: group.id,
@@ -46,8 +52,9 @@ export function projectActivityLog(groups: Group[]): ActivityLogProjection {
           recordedMemberName: payment.recordedMemberName,
           amountCents: payment.amountCents,
           recordedAt: payment.recordedAt,
-        })),
-      ),
+          maxEditableAmountCents: membership.quota.amountCents - (collectedAmountCents - payment.amountCents),
+        }));
+      }),
     )
     .sort(comparePaymentsByRecordedAt);
 

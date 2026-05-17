@@ -15,9 +15,9 @@ import {
 } from 'react-native';
 
 import { MemberQuotaProjection } from '@/src/utils/groupProjection';
-import { parseEuroInputToCents } from '@/src/utils/money';
+import { formatCents, parseEuroInputToCents } from '@/src/utils/money';
 
-type AddPaymentMemberOption = Pick<MemberQuotaProjection, 'membershipId' | 'memberFullName'>;
+type AddPaymentMemberOption = Pick<MemberQuotaProjection, 'membershipId' | 'memberFullName' | 'remainingAmountCents'>;
 
 type AddPaymentModalProps = Readonly<{
   visible: boolean;
@@ -34,6 +34,7 @@ export function AddPaymentModal({ visible, members, onCancel, onSubmit }: AddPay
   const [amountInput, setAmountInput] = useState('');
   const [amountError, setAmountError] = useState<string | null>(null);
   const [memberError, setMemberError] = useState<string | null>(null);
+  const selectedMember = members.find((member) => member.membershipId === selectedMembershipId);
 
   useEffect(() => {
     if (!visible) {
@@ -53,7 +54,7 @@ export function AddPaymentModal({ visible, members, onCancel, onSubmit }: AddPay
   const handleSave = () => {
     let hasError = false;
 
-    if (!selectedMembershipId) {
+    if (!selectedMembershipId || !selectedMember) {
       setMemberError('Please select a member');
       hasError = true;
     }
@@ -61,6 +62,11 @@ export function AddPaymentModal({ visible, members, onCancel, onSubmit }: AddPay
     const parsedAmountCents = parseEuroInputToCents(amountInput);
     if (parsedAmountCents === null || parsedAmountCents <= 0) {
       setAmountError('Enter an amount greater than 0');
+      hasError = true;
+    }
+
+    if (selectedMember && parsedAmountCents !== null && parsedAmountCents > selectedMember.remainingAmountCents) {
+      setAmountError(`Enter an amount up to €${formatCents(selectedMember.remainingAmountCents)}`);
       hasError = true;
     }
 
@@ -113,6 +119,12 @@ export function AddPaymentModal({ visible, members, onCancel, onSubmit }: AddPay
             </View>
             {memberError ? (
               <Text className="text-xs text-red-500 dark:text-red-400 -mt-1">{memberError}</Text>
+            ) : null}
+
+            {selectedMember ? (
+              <Text className="text-xs text-zinc-500 dark:text-zinc-400 -mt-1">
+                Remaining quota: €{formatCents(selectedMember.remainingAmountCents)}
+              </Text>
             ) : null}
 
             <TextInput

@@ -1,4 +1,4 @@
-import { ActivityEntry, Group, Membership, Payment } from '@/src/types/group';
+import { Group, Membership, Payment } from '@/src/types/group';
 
 type PaymentFixture = {
   id: string;
@@ -138,62 +138,5 @@ export const mockGroups: Group[] = [
       buildMembership('Viaggio Sardegna', { id: 'v7', fullName: 'Marta Riva', joinedAt: '2026-03-01T10:00:00.000Z', quotaAmountCents: 15000, payments: [{ id: 'p-g4-v7', amountCents: 15000, recordedAt: '2026-03-01T10:00:00.000Z' }] }),
       buildMembership('Viaggio Sardegna', { id: 'v8', fullName: 'Davide Neri', joinedAt: '2026-03-01T10:00:00.000Z', quotaAmountCents: 15000, payments: [{ id: 'p-g4-v8', amountCents: 10000, recordedAt: '2026-03-01T10:00:00.000Z' }] }),
     ],
-  },
-];
-
-export const mockActivities: ActivityEntry[] = [
-  {
-    id: 'a1',
-    groupId: 'g2',
-    groupName: 'Cena Classe',
-    memberName: 'Chiara Marino',
-    amountCents: 4000,
-    date: '2026-03-15T09:39:00.000Z',
-    status: 'confirmed',
-  },
-  {
-    id: 'a2',
-    groupId: 'g1',
-    groupName: 'Regalo di Nozze Luca',
-    memberName: 'Stefano Pellegrini',
-    amountCents: 2500,
-    date: '2026-03-15T09:23:00.000Z',
-    status: 'pending',
-  },
-  {
-    id: 'a3',
-    groupId: 'g2',
-    groupName: 'Cena Classe',
-    memberName: 'Simone Greco',
-    amountCents: 4000,
-    date: '2026-03-15T08:41:00.000Z',
-    status: 'confirmed',
-  },
-  {
-    id: 'a4',
-    groupId: 'g1',
-    groupName: 'Regalo di Nozze Luca',
-    memberName: 'Andrea Bruno',
-    amountCents: 2500,
-    date: '2026-03-15T07:41:00.000Z',
-    status: 'confirmed',
-  },
-  {
-    id: 'a5',
-    groupId: 'g3',
-    groupName: 'Compleanno Sara',
-    memberName: 'Fabio Ricci',
-    amountCents: 2000,
-    date: '2026-03-14T18:30:00.000Z',
-    status: 'confirmed',
-  },
-  {
-    id: 'a6',
-    groupId: 'g4',
-    groupName: 'Viaggio Sardegna',
-    memberName: 'Marta Riva',
-    amountCents: 15000,
-    date: '2026-03-14T14:10:00.000Z',
-    status: 'confirmed',
   },
 ];

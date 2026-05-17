@@ -40,24 +40,6 @@ export interface Group {
   memberships: Membership[];
 }
 
-export interface GroupSummary {
-  totalGroups: number;
-  activeGroups: number;
-  totalCollectedCents: MoneyCents;
-  todayCollectedCents: MoneyCents;
-  totalPendingMemberships: number;
-}
-
-export interface ActivityEntry {
-  id: string;
-  groupId: string;
-  groupName: string;
-  memberName: string;
-  amountCents: MoneyCents;
-  date: string;
-  status: 'confirmed' | 'pending';
-}
-
 export type CreateGroupInput = {
   name: string;
   category?: GroupCategory;

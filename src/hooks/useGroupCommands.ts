@@ -4,9 +4,7 @@ export function useGroupCommands() {
   const {
     createGroup,
     deleteGroup,
-    addMembership,
     recordPayment,
-    markMembershipAsPaid,
     deletePayment,
     editPayment,
   } = useGroups();
@@ -14,9 +12,7 @@ export function useGroupCommands() {
   return {
     createGroup,
     deleteGroup,
-    addMembership,
     recordPayment,
-    markMembershipAsPaid,
     deletePayment,
     editPayment,
   };

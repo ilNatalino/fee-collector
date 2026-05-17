@@ -87,20 +87,43 @@ export function GroupFormModal({ visible, onCancel, onSubmit }: GroupFormModalPr
       return;
     }
 
-    const validMemberships = members
-      .filter((m) => m.name.trim())
-      .map((m) => ({
-        memberName: m.name.trim(),
-        quotaAmountCents: parseEuroInputToCents(m.amount) ?? 0,
-      }));
+    const normalizedMemberships = members.map((member) => ({
+      memberName: member.name.trim(),
+      quotaAmountCents: parseEuroInputToCents(member.amount),
+    }));
 
-    if (validMemberships.length === 0) {
+    if (normalizedMemberships.length === 0) {
       setError('Add at least one member');
       return;
     }
 
-    if (validMemberships.some((membership) => membership.quotaAmountCents <= 0)) {
+    if (normalizedMemberships.some((membership) => !membership.memberName)) {
+      setError('Enter a full name for every member');
+      return;
+    }
+
+    if (normalizedMemberships.some((membership) => membership.quotaAmountCents === null || membership.quotaAmountCents <= 0)) {
       setError('Enter a quota amount greater than 0 for every member');
+      return;
+    }
+
+    const memberNames = normalizedMemberships.map((membership) => membership.memberName);
+    if (new Set(memberNames).size !== memberNames.length) {
+      setError('Each member can appear only once in a group');
+      return;
+    }
+
+    const validMemberships = normalizedMemberships.map((membership) => ({
+      memberName: membership.memberName,
+      quotaAmountCents: membership.quotaAmountCents!,
+    }));
+    const totalQuotaAmountCents = validMemberships.reduce(
+      (sum, membership) => sum + membership.quotaAmountCents,
+      0,
+    );
+
+    if (totalQuotaAmountCents !== parsedTargetAmountCents) {
+      setError('Member quotas must add up exactly to the group target');
       return;
     }
 

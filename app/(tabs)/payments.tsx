@@ -5,36 +5,35 @@ import { QuotaFormModal } from '@/src/components/QuotaFormModal';
 import { Screen } from '@/src/components/Screen';
 import { SwipeableList } from '@/src/components/SwipeableList';
 import { UserActivityItem } from '@/src/components/UserActivityItem';
-import { useGroups } from '@/src/hooks/useGroups';
-import { useUserActivities } from '@/src/hooks/useUserActivities';
-import { UserActivity } from '@/src/types/userActivity';
-import { eurosToCents } from '@/src/utils/money';
+import { useActivityLogProjection } from '@/src/hooks/useActivityLogProjection';
+import { useGroupCommands } from '@/src/hooks/useGroupCommands';
+import { PaymentProjection } from '@/src/utils/activityLog';
 
 export default function PaymentsScreen() {
-  const { activities } = useUserActivities();
-  const { deletePayment, editPayment } = useGroups();
-  const [activityToDelete, setActivityToDelete] = useState<UserActivity | null>(null);
-  const [activityToEdit, setActivityToEdit] = useState<UserActivity | null>(null);
+  const { activityLogProjection } = useActivityLogProjection();
+  const { deletePayment, editPayment } = useGroupCommands();
+  const [paymentToDelete, setPaymentToDelete] = useState<PaymentProjection | null>(null);
+  const [paymentToEdit, setPaymentToEdit] = useState<PaymentProjection | null>(null);
 
-  const closeDeleteModal = () => setActivityToDelete(null);
-  const closeEditModal = () => setActivityToEdit(null);
+  const closeDeleteModal = () => setPaymentToDelete(null);
+  const closeEditModal = () => setPaymentToEdit(null);
 
   const handleConfirmDelete = async () => {
-    if (!activityToDelete) {
+    if (!paymentToDelete) {
       return;
     }
 
-    await deletePayment(activityToDelete.id);
+    await deletePayment(paymentToDelete.paymentId);
     closeDeleteModal();
   };
 
-  const handleConfirmEdit = async ({ amount }: { amount: number }) => {
-    if (!activityToEdit) {
+  const handleConfirmEdit = async ({ amountCents }: { amountCents: number }) => {
+    if (!paymentToEdit) {
       return;
     }
 
-    await editPayment(activityToEdit.id, {
-      amountCents: eurosToCents(amount),
+    await editPayment(paymentToEdit.paymentId, {
+      amountCents,
     });
     closeEditModal();
   };
@@ -42,23 +41,24 @@ export default function PaymentsScreen() {
   return (
     <Screen>
       <SwipeableList
-        data={activities}
-        keyExtractor={(item) => item.id}
+        data={activityLogProjection.payments}
+        keyExtractor={(item) => item.paymentId}
         renderItem={(item) => <UserActivityItem activity={item} />}
         editFeature
-        onRequestEdit={setActivityToEdit}
+        onRequestEdit={setPaymentToEdit}
         deleteFeature
-        onRequestDelete={setActivityToDelete}
+        onRequestDelete={setPaymentToDelete}
       />
 
       <QuotaFormModal
-        visible={Boolean(activityToEdit)}
+        visible={Boolean(paymentToEdit)}
         title="Edit payment"
-        description={activityToEdit ? `Recorded for ${activityToEdit.memberName}` : undefined}
+        description={paymentToEdit ? `Recorded for ${paymentToEdit.recordedMemberName}` : undefined}
         confirmLabel="Save"
         cancelAccessibilityLabel="Cancel edit payment"
         confirmAccessibilityLabel="Confirm edit payment"
-        initialAmount={activityToEdit?.amount}
+        initialAmountCents={paymentToEdit?.amountCents}
+        maxAmountCents={paymentToEdit?.maxEditableAmountCents}
         onCancel={closeEditModal}
         onSubmit={(payload) => {
           void handleConfirmEdit(payload);
@@ -66,9 +66,9 @@ export default function PaymentsScreen() {
       />
 
       <DeleteConfirmationModal
-        visible={Boolean(activityToDelete)}
+        visible={Boolean(paymentToDelete)}
         title="Delete payment"
-        message={`Are you sure you want to delete the payment recorded for ${activityToDelete?.memberName ?? 'this member'}?`}
+        message={`Are you sure you want to delete the payment recorded for ${paymentToDelete?.recordedMemberName ?? 'this member'}?`}
         cancelLabel="Cancel"
         confirmLabel="Delete"
         cancelAccessibilityLabel="Cancel delete payment"

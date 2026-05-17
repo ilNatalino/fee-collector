@@ -2,8 +2,8 @@ import { describe, expect, it } from 'vitest';
 
 import { mockGroups } from '../data/mockGroups';
 
+import { projectActivityLog } from './activityLog';
 import { deletePaymentInGroups, editPaymentInGroups } from './groupCommands';
-import { getUserActivitiesFromGroups } from './groupPayments';
 import { projectGroup } from './groupProjection';
 
 function getCollectedAmountCents(groupId: string, groups = mockGroups): number {
@@ -22,29 +22,30 @@ function getCollectedAmountCents(groupId: string, groups = mockGroups): number {
   return projection.collectedAmountCents;
 }
 
-describe('group payments', () => {
-  it('keeps activity reads and group totals in sync after editing a payment', () => {
+describe('activity log and group projections stay in sync', () => {
+  it('reflects the same current payment after editing a payment', () => {
     const targetPaymentId = 'p-g4-v3';
     const originalCollectedAmountCents = getCollectedAmountCents('g4');
     const updatedGroups = editPaymentInGroups(mockGroups, targetPaymentId, {
       amountCents: 9000,
     });
-    const updatedGroup = updatedGroups.find((group) => group.id === 'g4');
-    const updatedActivity = getUserActivitiesFromGroups(updatedGroups).find((activity) => activity.id === targetPaymentId);
+    const updatedPayment = projectActivityLog(updatedGroups).payments.find(
+      (payment) => payment.paymentId === targetPaymentId,
+    );
 
-    expect(updatedActivity?.amount).toBe(90);
-    expect(updatedGroup).toBeDefined();
+    expect(updatedPayment?.amountCents).toBe(9000);
+    expect(updatedPayment?.maxEditableAmountCents).toBe(15000);
     expect(getCollectedAmountCents('g4', updatedGroups)).toBe(originalCollectedAmountCents + 4000);
   });
 
-  it('keeps activity reads and group totals in sync after deleting a payment', () => {
+  it('removes deleted payments from the activity log and lowers the group total', () => {
     const targetPaymentId = 'p-g4-v3';
     const updatedGroups = editPaymentInGroups(mockGroups, targetPaymentId, {
       amountCents: 9000,
     });
     const groupsWithoutPayment = deletePaymentInGroups(updatedGroups, targetPaymentId);
 
-    expect(getUserActivitiesFromGroups(groupsWithoutPayment).some((activity) => activity.id === targetPaymentId)).toBe(false);
+    expect(projectActivityLog(groupsWithoutPayment).payments.some((payment) => payment.paymentId === targetPaymentId)).toBe(false);
     expect(getCollectedAmountCents('g4', groupsWithoutPayment)).toBe(getCollectedAmountCents('g4', updatedGroups) - 9000);
   });
 });

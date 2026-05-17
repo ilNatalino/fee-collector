@@ -1,3 +1,4 @@
+import { formatCents, parseEuroInputToCents } from '@/src/utils/money';
 import { MotiView } from 'moti';
 import { useEffect, useState } from 'react';
 import { Modal, Pressable, Text, TextInput, View } from 'react-native';
@@ -10,9 +11,10 @@ type QuotaFormModalProps = Readonly<{
   cancelLabel?: string;
   cancelAccessibilityLabel: string;
   confirmAccessibilityLabel: string;
-  initialAmount?: number;
+  initialAmountCents?: number;
+  maxAmountCents?: number;
   onCancel: () => void;
-  onSubmit: (payload: { amount: number }) => void;
+  onSubmit: (payload: { amountCents: number }) => void;
 }>;
 
 export function QuotaFormModal({
@@ -23,7 +25,8 @@ export function QuotaFormModal({
   cancelLabel = 'Cancel',
   cancelAccessibilityLabel,
   confirmAccessibilityLabel,
-  initialAmount,
+  initialAmountCents,
+  maxAmountCents,
   onCancel,
   onSubmit,
 }: QuotaFormModalProps) {
@@ -35,19 +38,24 @@ export function QuotaFormModal({
       return;
     }
 
-    setAmountInput(initialAmount ? `${initialAmount}` : '');
+    setAmountInput(initialAmountCents ? formatCents(initialAmountCents) : '');
     setAmountError(null);
-  }, [initialAmount, visible]);
+  }, [initialAmountCents, visible]);
 
   const handleSave = () => {
-    const parsedAmount = Number.parseFloat(amountInput.replace(',', '.'));
-    if (!Number.isFinite(parsedAmount) || parsedAmount <= 0) {
+    const parsedAmountCents = parseEuroInputToCents(amountInput);
+    if (parsedAmountCents === null || parsedAmountCents <= 0) {
       setAmountError('Enter an amount greater than 0');
       return;
     }
 
+    if (maxAmountCents !== undefined && parsedAmountCents > maxAmountCents) {
+      setAmountError(`Enter an amount up to €${formatCents(maxAmountCents)}`);
+      return;
+    }
+
     onSubmit({
-      amount: parsedAmount,
+      amountCents: parsedAmountCents,
     });
     setAmountError(null);
   };

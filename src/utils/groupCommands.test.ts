@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { mockGroups } from '../data/mockGroups';
 
 import {
+  createGroupInGroups,
     deletePaymentInGroups,
     editPaymentInGroups,
     markMembershipAsPaidInGroups,
@@ -10,6 +11,75 @@ import {
 } from './groupCommands';
 
 describe('group commands', () => {
+  it('rejects creating a group without memberships', () => {
+    const updatedGroups = createGroupInGroups(mockGroups, {
+      name: 'Empty Roster',
+      targetAmountCents: 1000,
+      memberships: [],
+    });
+
+    expect(updatedGroups).toBe(mockGroups);
+  });
+
+  it('rejects creating a group when quotas do not sum to the group target', () => {
+    const updatedGroups = createGroupInGroups(mockGroups, {
+      name: 'Broken Target',
+      targetAmountCents: 3000,
+      memberships: [
+        {
+          memberName: 'New Member',
+          quotaAmountCents: 2000,
+        },
+      ],
+    });
+
+    expect(updatedGroups).toBe(mockGroups);
+  });
+
+  it('rejects creating a group with duplicate full names in the same roster', () => {
+    const updatedGroups = createGroupInGroups(mockGroups, {
+      name: 'Duplicate Names',
+      targetAmountCents: 4000,
+      memberships: [
+        {
+          memberName: 'Giulia Rossi',
+          quotaAmountCents: 2000,
+        },
+        {
+          memberName: 'Giulia Rossi',
+          quotaAmountCents: 2000,
+        },
+      ],
+    });
+
+    expect(updatedGroups).toBe(mockGroups);
+  });
+
+  it('reuses an existing member identity for exact full-name matches when creating a group', () => {
+    const existingMember = mockGroups[0].memberships[0].member;
+    const generatedIds = ['g-new', 'membership-new'];
+    const updatedGroups = createGroupInGroups(
+      mockGroups,
+      {
+        name: 'Weekend Escape',
+        targetAmountCents: 3000,
+        memberships: [
+          {
+            memberName: existingMember.fullName,
+            quotaAmountCents: 3000,
+          },
+        ],
+      },
+      {
+        createdAt: '2026-03-22T10:00:00.000Z',
+        createId: () => generatedIds.shift() ?? 'unused-id',
+      },
+    );
+
+    expect(updatedGroups).not.toBe(mockGroups);
+    expect(updatedGroups[0].memberships[0].member).toEqual(existingMember);
+  });
+
   it('records a payment on the targeted membership', () => {
     const updatedGroups = recordPaymentInGroups(mockGroups, {
       groupId: 'g4',
@@ -33,6 +103,26 @@ describe('group commands', () => {
     });
   });
 
+  it('rejects recording a payment that is not strictly positive', () => {
+    const updatedGroups = recordPaymentInGroups(mockGroups, {
+      groupId: 'g4',
+      membershipId: 'v5',
+      amountCents: 0,
+    });
+
+    expect(updatedGroups).toBe(mockGroups);
+  });
+
+  it('rejects recording a payment that would exceed the remaining quota', () => {
+    const updatedGroups = recordPaymentInGroups(mockGroups, {
+      groupId: 'g4',
+      membershipId: 'v3',
+      amountCents: 10001,
+    });
+
+    expect(updatedGroups).toBe(mockGroups);
+  });
+
   it('edits a payment amount without changing its membership or recorded labels', () => {
     const updatedGroups = editPaymentInGroups(mockGroups, 'p-g4-v3', {
       amountCents: 9000,
@@ -52,6 +142,14 @@ describe('group commands', () => {
       recordedMemberName: 'Luca Ferri',
       recordedGroupName: 'Viaggio Sardegna',
     });
+  });
+
+  it('rejects editing a payment to a non-positive amount', () => {
+    const updatedGroups = editPaymentInGroups(mockGroups, 'p-g4-v3', {
+      amountCents: 0,
+    });
+
+    expect(updatedGroups).toBe(mockGroups);
   });
 
   it('rejects a payment edit that would exceed the membership quota', () => {

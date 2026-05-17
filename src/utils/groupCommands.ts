@@ -1,6 +1,11 @@
-import { Group, Membership, Payment } from '@/src/types/group';
+import { CreateGroupInput, Group, GroupCategory, Member, Membership, Payment } from '@/src/types/group';
 
 import { projectMemberQuota } from './groupProjection';
+
+export type CreateGroupCommandOptions = {
+  createId?: () => string;
+  createdAt?: string;
+};
 
 export type RecordPaymentInput = {
   groupId: string;
@@ -17,9 +22,117 @@ export type EditPaymentInput = {
 export type MarkMembershipAsPaidInput = Omit<RecordPaymentInput, 'amountCents'>;
 
 const createId = () => `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+const GROUP_CATEGORIES: readonly GroupCategory[] = ['food', 'travel', 'home', 'utilities'];
 
 function isValidPaymentAmount(amountCents: number): boolean {
   return Number.isInteger(amountCents) && amountCents > 0;
+}
+
+function isValidGroupCategory(category: string): category is GroupCategory {
+  return GROUP_CATEGORIES.includes(category as GroupCategory);
+}
+
+function normalizeFullName(fullName: string): string {
+  return fullName.trim();
+}
+
+function hasDuplicateFullNames(fullNames: string[]): boolean {
+  const seenNames = new Set<string>();
+
+  return fullNames.some((fullName) => {
+    if (seenNames.has(fullName)) {
+      return true;
+    }
+
+    seenNames.add(fullName);
+    return false;
+  });
+}
+
+function buildMemberIndex(groups: Group[]): Map<string, Member> {
+  return groups.reduce<Map<string, Member>>((memberIndex, group) => {
+    group.memberships.forEach((membership) => {
+      if (!memberIndex.has(membership.member.fullName)) {
+        memberIndex.set(membership.member.fullName, membership.member);
+      }
+    });
+
+    return memberIndex;
+  }, new Map<string, Member>());
+}
+
+export function createGroupInGroups(
+  groups: Group[],
+  input: CreateGroupInput,
+  options: CreateGroupCommandOptions = {},
+): Group[] {
+  const groupName = input.name.trim();
+  const normalizedMemberships = input.memberships.map((membership) => ({
+    memberName: normalizeFullName(membership.memberName),
+    quotaAmountCents: membership.quotaAmountCents,
+  }));
+
+  if (!groupName || !isValidPaymentAmount(input.targetAmountCents)) {
+    return groups;
+  }
+
+  if (input.category !== undefined && !isValidGroupCategory(input.category)) {
+    return groups;
+  }
+
+  if (normalizedMemberships.length === 0) {
+    return groups;
+  }
+
+  if (normalizedMemberships.some((membership) => !membership.memberName || !isValidPaymentAmount(membership.quotaAmountCents))) {
+    return groups;
+  }
+
+  if (hasDuplicateFullNames(normalizedMemberships.map((membership) => membership.memberName))) {
+    return groups;
+  }
+
+  const totalQuotaAmountCents = normalizedMemberships.reduce(
+    (sum, membership) => sum + membership.quotaAmountCents,
+    0,
+  );
+
+  if (totalQuotaAmountCents !== input.targetAmountCents) {
+    return groups;
+  }
+
+  const createdAt = options.createdAt ?? new Date().toISOString();
+  const createIdentifier = options.createId ?? createId;
+  const existingMembersByFullName = buildMemberIndex(groups);
+  const newGroup: Group = {
+    id: createIdentifier(),
+    name: groupName,
+    category: input.category,
+    emoji: input.emoji,
+    createdDate: createdAt,
+    targetAmountCents: input.targetAmountCents,
+    memberships: normalizedMemberships.map((membershipInput) => {
+      const existingMember = existingMembersByFullName.get(membershipInput.memberName);
+
+      return {
+        id: createIdentifier(),
+        joinedAt: createdAt,
+        member: existingMember
+          ? { ...existingMember }
+          : {
+              id: createIdentifier(),
+              fullName: membershipInput.memberName,
+              createdAt,
+            },
+        quota: {
+          amountCents: membershipInput.quotaAmountCents,
+        },
+        payments: [],
+      };
+    }),
+  };
+
+  return [newGroup, ...groups];
 }
 
 function buildPayment(group: Group, membership: Membership, input: RecordPaymentInput): Payment {

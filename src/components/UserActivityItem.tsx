@@ -1,8 +1,9 @@
-import { UserActivity } from '@/src/types/userActivity';
+import { PaymentProjection } from '@/src/utils/activityLog';
+import { formatCents } from '@/src/utils/money';
 import { Text, View } from 'react-native';
 
 type UserActivityItemProps = {
-  activity: UserActivity;
+  activity: PaymentProjection;
 };
 
 function getTimeAgo(dateStr: string): string {
@@ -25,21 +26,21 @@ export function UserActivityItem({ activity }: UserActivityItemProps) {
       <View className="flex-row items-center gap-x-3">
         <View>
           <Text className="text-[15px] font-semibold text-zinc-900 dark:text-zinc-100 mb-0.5">
-            {activity.memberName}
+            {activity.recordedMemberName}
           </Text>
-          {activity.groupName ? (
+          {activity.recordedGroupName ? (
             <Text className="text-[13px] text-zinc-400 dark:text-zinc-500">
-              {activity.groupName}
+              {activity.recordedGroupName}
             </Text>
           ) : null}
         </View>
       </View>
       <View className="items-end">
         <Text className="text-[15px] font-bold text-emerald-500 dark:text-emerald-400">
-          +€{activity.amount.toFixed(2)}
+          +€{formatCents(activity.amountCents)}
         </Text>
         <Text className="text-xs text-zinc-400 dark:text-zinc-500 mt-0.5">
-          {getTimeAgo(activity.date)}
+          {getTimeAgo(activity.recordedAt)}
         </Text>
       </View>
     </View>
