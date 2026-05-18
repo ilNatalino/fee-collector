@@ -15,15 +15,17 @@ import {
   prepareDeletePaymentCommand,
   prepareEditPaymentCommand,
   prepareRecordPaymentCommand,
+  SelectedMembershipActivityView,
   selectGroupView,
+  selectMembershipActivityView,
   settlePreparedGroupCommand,
 } from '@/src/modules/groupCollection';
 import { createAsyncStorageGroupCollectionAdapter } from '@/src/storage/groupCollectionStorage';
 import { CreateGroupInput } from '@/src/types/group';
+import { ActivityLogProjection } from '@/src/utils/activityLog';
 import {
   EditPaymentInput,
 } from '@/src/utils/groupCommands';
-import { ActivityLogProjection } from '@/src/utils/activityLog';
 import { GroupCollectionProjection, GroupProjection } from '@/src/utils/groupProjection';
 
 export type GroupContextValue = {
@@ -37,6 +39,7 @@ export type GroupContextValue = {
     issues: GroupCollectionIssue[];
     isMissing: boolean;
   };
+  getMembershipActivityView: (groupId: string | undefined, membershipId: string | undefined) => SelectedMembershipActivityView;
   createGroup: (input: CreateGroupInput) => Promise<GroupCommandResult>;
   deleteGroup: (groupId: string) => Promise<GroupCommandResult>;
   recordPayment: (groupId: string, membershipId: string, amountCents: number) => Promise<GroupCommandResult>;
@@ -137,6 +140,10 @@ export function GroupProvider({ children, adapter }: GroupProviderProps) {
     return selectGroupView(stateRef.current, groupId);
   }, []);
 
+  const getMembershipActivityView = useCallback((groupId: string | undefined, membershipId: string | undefined) => {
+    return selectMembershipActivityView(stateRef.current, groupId, membershipId);
+  }, []);
+
   const value = useMemo(
     () => ({
       groupCollectionProjection: view.groupCollectionProjection,
@@ -145,6 +152,7 @@ export function GroupProvider({ children, adapter }: GroupProviderProps) {
       syncStatus: view.syncStatus,
       issues: view.issues,
       getGroupView,
+      getMembershipActivityView,
       createGroup,
       deleteGroup,
       recordPayment,
@@ -158,6 +166,7 @@ export function GroupProvider({ children, adapter }: GroupProviderProps) {
       view.syncStatus,
       view.issues,
       getGroupView,
+      getMembershipActivityView,
       createGroup,
       deleteGroup,
       recordPayment,

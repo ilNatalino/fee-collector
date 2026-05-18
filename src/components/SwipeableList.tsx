@@ -1,4 +1,4 @@
-import { type ReactNode, useCallback, useRef } from 'react';
+import { type ReactElement, type ReactNode, useCallback, useRef } from 'react';
 import { FlatList, StyleProp, View, ViewStyle } from 'react-native';
 
 import { ListItem, type ListItemAction } from './ListItem';
@@ -7,6 +7,7 @@ type SwipeableListProps<T> = Readonly<{
   data: T[];
   keyExtractor: (item: T) => string;
   renderItem: (item: T) => ReactNode;
+  ListHeaderComponent?: ReactElement | null;
   editFeature?: boolean;
   onRequestEdit?: (item: T) => void;
   deleteFeature?: boolean;
@@ -23,6 +24,7 @@ export function SwipeableList<T>({
   data,
   keyExtractor,
   renderItem,
+  ListHeaderComponent,
   editFeature = false,
   onRequestEdit,
   deleteFeature = false,
@@ -57,6 +59,7 @@ export function SwipeableList<T>({
     <FlatList
       data={data}
       keyExtractor={keyExtractor}
+      ListHeaderComponent={ListHeaderComponent ?? null}
       renderItem={({ item }) => {
         const actions: ListItemAction[] = [];
         const itemId = keyExtractor(item);

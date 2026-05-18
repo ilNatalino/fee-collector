@@ -64,6 +64,10 @@ _Avoid_: paid flag, payment state
 A chronological view of the currently recorded Payments across one or more Groups, preserving the recorded Member and Group names for each listed Payment.
 _Avoid_: quota list, member list
 
+**Membership Activity Log**:
+A chronological view of the currently recorded Payments for one Membership inside one Group, preserving the recorded Member and Group names for each listed Payment.
+_Avoid_: member profile, user history
+
 ## Relationships
 
 - A **Group** has one or more **Memberships**
@@ -92,6 +96,7 @@ _Avoid_: quota list, member list
 - A **Quota Status** is determined from the current **Payments** against a **Quota**
 - A **Group Progress** and **Quota Breakdown** are determined from the current **Payments** in the **Group**
 - An **Activity Log** lists the current state of recorded **Payments** in chronological order
+- A **Membership Activity Log** lists the current state of recorded **Payments** for one **Membership** in chronological order
 
 ## Example dialogue
 
@@ -127,6 +132,7 @@ _Avoid_: quota list, member list
 - Payment status existed in code without a real workflow; resolved: every **Payment** is confirmed at creation, so pending status is not part of the domain language.
 - Payment editing scope was unclear; resolved: editing a **Payment** keeps it on the same **Membership** and may correct only fields on that **Payment**.
 - Payment coverage was unclear; resolved: each **Payment** belongs to exactly one **Membership**.
+- "member activity" was ambiguous between cross-group member history and group-local membership history; resolved: the canonical term is **Membership Activity Log**, scoped to one **Membership** in one **Group**.
 - Completion semantics were unclear under mutable current-state **Payments**; resolved: a **Group** reopens from completed to collecting if current **Payments** no longer cover the **Group Target**.
 - **Payment** amount validity was unclear; resolved: every **Payment** amount is strictly positive.
 - Editing a **Payment** could have broken the **Quota** cap; resolved: after any edit, the current **Payments** for a **Membership** must still not exceed its **Quota**.

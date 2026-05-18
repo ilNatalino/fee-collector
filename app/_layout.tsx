@@ -37,7 +37,8 @@ function RootLayoutNav() {
     <NavigationThemeProvider value={navigationTheme}>
       <Stack>
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="group/[id]" options={{ headerShown: false }} />
+        <Stack.Screen name="group/[id]/index" options={{ headerShown: false }} />
+        <Stack.Screen name="group/[id]/membership/[membershipId]" options={{ headerShown: false }} />
       </Stack>
     </NavigationThemeProvider>
   );

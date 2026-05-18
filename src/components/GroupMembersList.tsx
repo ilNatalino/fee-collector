@@ -1,4 +1,4 @@
-import { Check, Clock } from 'lucide-react-native';
+import { Check, ChevronRight, Clock } from 'lucide-react-native';
 import { MotiView } from 'moti';
 import { useColorScheme } from 'nativewind';
 import { ScrollView, Text, View } from 'react-native';
@@ -9,9 +9,10 @@ import { formatCents } from '@/src/utils/money';
 
 interface GroupMembersListProps {
   memberQuotaProjections: MemberQuotaProjection[];
+  onPressMembership: (memberQuotaProjection: MemberQuotaProjection) => void;
 }
 
-export function GroupMembersList({ memberQuotaProjections }: GroupMembersListProps) {
+export function GroupMembersList({ memberQuotaProjections, onPressMembership }: GroupMembersListProps) {
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === 'dark';
 
@@ -28,8 +29,10 @@ export function GroupMembersList({ memberQuotaProjections }: GroupMembersListPro
       {memberQuotaProjections.map((memberQuotaProjection, index) => {
         const collectedAmountCents = memberQuotaProjection.collectedAmountCents;
         const quotaStatus = memberQuotaProjection.quotaStatus;
+        const hasRecordedPayments = collectedAmountCents > 0;
         const isPartial = quotaStatus === 'partial';
         const isFullyPaid = quotaStatus === 'paid';
+        const subtitle = isFullyPaid ? 'Paid in full' : isPartial ? 'Partially paid' : 'No payments yet';
 
         return (
           <MotiView
@@ -39,7 +42,14 @@ export function GroupMembersList({ memberQuotaProjections }: GroupMembersListPro
             transition={{ type: 'spring', damping: 20, stiffness: 90, delay: index * 50 }}
             className="w-full mb-3"
           >
-            <AnimatedPressable className="flex-row items-center w-full bg-white dark:bg-zinc-900 rounded-2xl p-4 shadow-sm shadow-zinc-950/5 ring-1 ring-zinc-950/5 dark:ring-white/10">
+            <AnimatedPressable
+              onPress={() => onPressMembership(memberQuotaProjection)}
+              accessibilityRole="button"
+              accessibilityLabel={hasRecordedPayments
+                ? `View activity for ${memberQuotaProjection.memberFullName}`
+                : `Show payment info for ${memberQuotaProjection.memberFullName}`}
+              className="flex-row items-center w-full bg-white dark:bg-zinc-900 rounded-2xl p-4 shadow-sm shadow-zinc-950/5 ring-1 ring-zinc-950/5 dark:ring-white/10"
+            >
               <View className="relative mr-4">
                 <View className={`w-12 h-12 rounded-full items-center justify-center ${
                   isFullyPaid ? 'bg-emerald-50 dark:bg-emerald-500/10' : 
@@ -73,23 +83,29 @@ export function GroupMembersList({ memberQuotaProjections }: GroupMembersListPro
                   {memberQuotaProjection.memberFullName}
                 </Text>
                 <Text className="text-xs font-medium text-zinc-500 dark:text-zinc-400 mt-0.5" numberOfLines={1}>
-                  {isFullyPaid ? 'Paid in full' : isPartial ? 'Partially paid' : ''}
+                  {subtitle}
                 </Text>
               </View>
               
-              <View className="items-end justify-center ml-2">
-                <Text className={`text-base font-bold ${
-                  isFullyPaid ? 'text-emerald-600 dark:text-emerald-400' : 
-                  isPartial ? 'text-amber-600 dark:text-amber-400' :
-                  'text-zinc-900 dark:text-zinc-100'
-                }`}>
-                  €{formatCents(memberQuotaProjection.quotaAmountCents)}
-                </Text>
-                {isPartial && (
-                  <Text className="text-[10px] font-medium text-zinc-500 dark:text-zinc-400 mt-0.5">
-                    €{formatCents(collectedAmountCents)} paid
+              <View className="ml-2 flex-row items-center">
+                <View className="items-end justify-center">
+                  <Text className={`text-base font-bold ${
+                    isFullyPaid ? 'text-emerald-600 dark:text-emerald-400' : 
+                    isPartial ? 'text-amber-600 dark:text-amber-400' :
+                    'text-zinc-900 dark:text-zinc-100'
+                  }`}>
+                    €{formatCents(memberQuotaProjection.quotaAmountCents)}
                   </Text>
-                )}
+                  {isPartial && (
+                    <Text className="text-[10px] font-medium text-zinc-500 dark:text-zinc-400 mt-0.5">
+                      €{formatCents(collectedAmountCents)} paid
+                    </Text>
+                  )}
+                </View>
+
+                {hasRecordedPayments ? (
+                  <ChevronRight size={18} color={isDark ? '#71717a' : '#a1a1aa'} style={{ marginLeft: 12 }} />
+                ) : null}
               </View>
             </AnimatedPressable>
           </MotiView>

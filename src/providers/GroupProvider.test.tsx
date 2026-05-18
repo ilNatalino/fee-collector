@@ -1,5 +1,5 @@
-import React from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import React from 'react';
 import { act, create, ReactTestRenderer } from 'react-test-renderer';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -54,6 +54,7 @@ describe('GroupProvider', () => {
 
     expect(getLatestValue().isHydrating).toBe(false);
     expect(getLatestValue().groupCollectionProjection?.totalGroupCount).toBe(4);
+    expect(getLatestValue().getMembershipActivityView('g4', 'v3').payments.map((payment) => payment.paymentId)).toEqual(['p-g4-v3']);
 
     let result: GroupCommandResult | undefined;
 

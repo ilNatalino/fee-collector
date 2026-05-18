@@ -4,12 +4,13 @@ import { mockGroups } from '../data/mockGroups';
 import { createInMemoryGroupCollectionAdapter } from '../storage/groupCollectionStorage';
 
 import {
-  buildGroupCollectionView,
-  GroupCollectionAdapter,
-  hydrateGroupCollectionState,
-  prepareCreateGroupCommand,
-  prepareRecordPaymentCommand,
-  settlePreparedGroupCommand,
+    buildGroupCollectionView,
+    GroupCollectionAdapter,
+    hydrateGroupCollectionState,
+    prepareCreateGroupCommand,
+    prepareRecordPaymentCommand,
+    selectMembershipActivityView,
+    settlePreparedGroupCommand,
 } from './groupCollection';
 
 async function hydrateSeedState() {
@@ -60,6 +61,37 @@ describe('group collection module', () => {
     expect(preparation.result.issues.map((issue) => issue.code)).toEqual(
       expect.arrayContaining(['invalid-group-name', 'group-has-no-memberships']),
     );
+  });
+
+  it('selects a membership activity view with the scoped payments and quota summary', async () => {
+    const state = await hydrateSeedState();
+    const view = selectMembershipActivityView(state, 'g4', 'v3');
+
+    expect(view.isMissing).toBe(false);
+    expect(view.groupProjection?.groupId).toBe('g4');
+    expect(view.membershipProjection?.membershipId).toBe('v3');
+    expect(view.membershipProjection?.memberFullName).toBe('Luca Ferri');
+    expect(view.payments.map((payment) => payment.paymentId)).toEqual(['p-g4-v3']);
+  });
+
+  it('keeps a valid unpaid membership selectable even when it has no recorded payments yet', async () => {
+    const state = await hydrateSeedState();
+    const view = selectMembershipActivityView(state, 'g4', 'v5');
+
+    expect(view.isMissing).toBe(false);
+    expect(view.membershipProjection?.membershipId).toBe('v5');
+    expect(view.membershipProjection?.quotaStatus).toBe('unpaid');
+    expect(view.payments).toEqual([]);
+  });
+
+  it('marks stale membership ids as missing without losing the group context', async () => {
+    const state = await hydrateSeedState();
+    const view = selectMembershipActivityView(state, 'g4', 'missing-membership');
+
+    expect(view.isMissing).toBe(true);
+    expect(view.groupProjection?.groupId).toBe('g4');
+    expect(view.membershipProjection).toBeNull();
+    expect(view.issues.map((issue) => issue.code)).toContain('membership-not-found');
   });
 
   it('rolls back an optimistic Payment update when persistence fails', async () => {

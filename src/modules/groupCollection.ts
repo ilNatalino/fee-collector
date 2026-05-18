@@ -1,25 +1,26 @@
-import { ActivityLogProjection, projectActivityLog } from '@/src/utils/activityLog';
+import { CreateGroupInput, Group, GroupCategory, Membership } from '@/src/types/group';
+import { ActivityLogProjection, PaymentProjection, projectActivityLog, projectGroupActivityLog } from '@/src/utils/activityLog';
 import {
-  createGroupInGroups,
-  deletePaymentInGroups,
-  editPaymentInGroups,
-  EditPaymentInput,
-  recordPaymentInGroups,
-  RecordPaymentInput,
+    createGroupInGroups,
+    deletePaymentInGroups,
+    editPaymentInGroups,
+    EditPaymentInput,
+    recordPaymentInGroups,
+    RecordPaymentInput,
 } from '@/src/utils/groupCommands';
 import {
-  GroupCollectionProjection,
-  GroupProjection,
-  isInvalidGroupCollectionProjection,
-  isInvalidGroupProjection,
-  isInvalidMemberQuotaProjection,
-  projectGroup,
-  projectGroupCollection,
-  projectMemberQuota,
-  ProjectionIssue,
-  ProjectionIssueCode,
+    GroupCollectionProjection,
+    GroupProjection,
+    isInvalidGroupCollectionProjection,
+    isInvalidGroupProjection,
+    isInvalidMemberQuotaProjection,
+    MemberQuotaProjection,
+    projectGroup,
+    projectGroupCollection,
+    ProjectionIssue,
+    ProjectionIssueCode,
+    projectMemberQuota,
 } from '@/src/utils/groupProjection';
-import { CreateGroupInput, Group, GroupCategory, Membership } from '@/src/types/group';
 
 const GROUP_CATEGORIES: readonly GroupCategory[] = ['food', 'travel', 'home', 'utilities'];
 
@@ -74,6 +75,14 @@ export interface GroupCollectionView {
 
 export interface SelectedGroupView {
   groupProjection: GroupProjection | null;
+  issues: GroupCollectionIssue[];
+  isMissing: boolean;
+}
+
+export interface SelectedMembershipActivityView {
+  groupProjection: GroupProjection | null;
+  membershipProjection: MemberQuotaProjection | null;
+  payments: PaymentProjection[];
   issues: GroupCollectionIssue[];
   isMissing: boolean;
 }
@@ -224,6 +233,88 @@ export function selectGroupView(state: GroupCollectionState, groupId: string | u
 
   return {
     groupProjection: projection,
+    issues: [],
+    isMissing: false,
+  };
+}
+
+export function selectMembershipActivityView(
+  state: GroupCollectionState,
+  groupId: string | undefined,
+  membershipId: string | undefined,
+): SelectedMembershipActivityView {
+  if (!groupId || !membershipId) {
+    return {
+      groupProjection: null,
+      membershipProjection: null,
+      payments: [],
+      issues: [],
+      isMissing: false,
+    };
+  }
+
+  if (state.isHydrating) {
+    return {
+      groupProjection: null,
+      membershipProjection: null,
+      payments: [],
+      issues: [buildIssue('hydration', 'module-hydrating', 'The Group collection is still hydrating.')],
+      isMissing: false,
+    };
+  }
+
+  const group = findGroup(state.groups, groupId);
+
+  if (!group) {
+    return {
+      groupProjection: null,
+      membershipProjection: null,
+      payments: [],
+      issues: state.issues.filter((issue) => issue.groupId === groupId),
+      isMissing: true,
+    };
+  }
+
+  const groupProjection = projectGroup(group);
+
+  if (isInvalidGroupProjection(groupProjection)) {
+    return {
+      groupProjection: null,
+      membershipProjection: null,
+      payments: [],
+      issues: mapProjectionIssues(groupProjection.issues, 'domain', groupId),
+      isMissing: false,
+    };
+  }
+
+  const locatedMembership = findMembership(state.groups, groupId, membershipId);
+
+  if (!locatedMembership) {
+    return {
+      groupProjection,
+      membershipProjection: null,
+      payments: [],
+      issues: [buildIssue('domain', 'membership-not-found', 'The requested Membership does not exist.', 'membershipId', groupId)],
+      isMissing: true,
+    };
+  }
+
+  const membershipProjection = projectMemberQuota(locatedMembership.membership);
+
+  if (isInvalidMemberQuotaProjection(membershipProjection)) {
+    return {
+      groupProjection,
+      membershipProjection: null,
+      payments: [],
+      issues: mapProjectionIssues(membershipProjection.issues, 'domain', groupId),
+      isMissing: false,
+    };
+  }
+
+  return {
+    groupProjection,
+    membershipProjection,
+    payments: projectGroupActivityLog(group).payments.filter((payment) => payment.membershipId === membershipId),
     issues: [],
     isMissing: false,
   };
