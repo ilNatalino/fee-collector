@@ -12,6 +12,7 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': path.resolve(rootDir),
+      'react-native': 'react-native-web',
     },
   },
 });

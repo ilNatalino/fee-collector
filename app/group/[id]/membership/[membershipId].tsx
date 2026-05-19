@@ -8,7 +8,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { AnimatedPressable } from '@/src/components/AnimatedPressable';
 import { DeleteConfirmationModal } from '@/src/components/DeleteConfirmationModal';
 import { MembershipPaymentItem } from '@/src/components/MembershipPaymentItem';
-import { QuotaFormModal } from '@/src/components/QuotaFormModal';
+import { PaymentFormModal } from '@/src/components/PaymentFormModal';
 import { SwipeableList } from '@/src/components/SwipeableList';
 import { useGroupCollection } from '@/src/hooks/useGroupCollection';
 import { PaymentProjection } from '@/src/utils/activityLog';
@@ -220,11 +220,11 @@ export default function MembershipActivityScreen() {
         />
       </MembershipActivityLayout>
 
-      <QuotaFormModal
+      <PaymentFormModal
         visible={isAddPaymentModalVisible}
         title="Add payment"
-        description={`Remaining quota: €${formatCents(membershipProjection.remainingAmountCents)}`}
         confirmLabel="Add"
+        amountHelperText={`Remaining quota: €${formatCents(membershipProjection.remainingAmountCents)}`}
         cancelAccessibilityLabel="Cancel add payment"
         confirmAccessibilityLabel="Confirm add payment"
         maxAmountCents={membershipProjection.remainingAmountCents}
@@ -235,11 +235,12 @@ export default function MembershipActivityScreen() {
         }}
       />
 
-      <QuotaFormModal
+      <PaymentFormModal
         visible={Boolean(paymentToEdit)}
         title="Edit payment"
         description={`Recorded for ${membershipProjection.memberFullName}`}
         confirmLabel="Save"
+        amountHelperText={paymentToEdit ? `Maximum amount: €${formatCents(paymentToEdit.maxEditableAmountCents)}` : undefined}
         cancelAccessibilityLabel="Cancel edit payment"
         confirmAccessibilityLabel="Confirm edit payment"
         initialAmountCents={paymentToEdit?.amountCents}

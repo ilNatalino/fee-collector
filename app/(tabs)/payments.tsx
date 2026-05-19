@@ -2,12 +2,13 @@ import { useState } from 'react';
 import { Text } from 'react-native';
 
 import { DeleteConfirmationModal } from '@/src/components/DeleteConfirmationModal';
-import { QuotaFormModal } from '@/src/components/QuotaFormModal';
+import { PaymentFormModal } from '@/src/components/PaymentFormModal';
 import { Screen } from '@/src/components/Screen';
 import { SwipeableList } from '@/src/components/SwipeableList';
 import { UserActivityItem } from '@/src/components/UserActivityItem';
 import { useGroupCollection } from '@/src/hooks/useGroupCollection';
 import { PaymentProjection } from '@/src/utils/activityLog';
+import { formatCents } from '@/src/utils/money';
 
 export default function PaymentsScreen() {
   const { activityLogProjection, deletePayment, editPayment, isHydrating } = useGroupCollection();
@@ -57,11 +58,12 @@ export default function PaymentsScreen() {
         onRequestDelete={setPaymentToDelete}
       />
 
-      <QuotaFormModal
+      <PaymentFormModal
         visible={Boolean(paymentToEdit)}
         title="Edit payment"
         description={paymentToEdit ? `Recorded for ${paymentToEdit.recordedMemberName}` : undefined}
         confirmLabel="Save"
+        amountHelperText={paymentToEdit ? `Maximum amount: €${formatCents(paymentToEdit.maxEditableAmountCents)}` : undefined}
         cancelAccessibilityLabel="Cancel edit payment"
         confirmAccessibilityLabel="Confirm edit payment"
         initialAmountCents={paymentToEdit?.amountCents}
